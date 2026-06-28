@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-packager . Cancionero --platform=win32 --arch=x64 --overwrite --out=dist --ignore=node_modules/.cache --ignore=dist --ignore=servidor.py --ignore=servidor.bat"
+    "build:electron": "electron-packager . Cancionero --platform=win32 --arch=x64 --overwrite --out=dist --ignore=node_modules/.cache --ignore=dist --ignore=servidor.py --ignore=servidor.bat"
   },
   "devDependencies": {
     "electron": "^28.0.0",
