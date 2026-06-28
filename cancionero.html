@@ -374,7 +374,9 @@ const db=(()=>{
     messagingSenderId:"318676850001",
     appId:"1:318676850001:web:4568555c08ff647527af70"
   });
-  return firebase.firestore();
+  const fs=firebase.firestore();
+  fs.enablePersistence({synchronizeTabs:true}).catch(e=>console.warn('Persistence:',e.code));
+  return fs;
 })();
 
 /* STATE */
@@ -384,8 +386,7 @@ let setlist=[],setlistMode=false,setlistPos=0;
 
 /* STORAGE */
 function persistSongs(){
-  if(window.electronAPI)window.electronAPI.saveSongs(JSON.stringify(allSongs));
-  else db.collection('cancionero').doc('data').set({songs:allSongs},{merge:true}).catch(console.error);
+  db.collection('cancionero').doc('data').set({songs:allSongs},{merge:true}).catch(console.error);
 }
 function initSongs(){allSongs=JSON.parse(JSON.stringify(INITIAL_SONGS))}
 
@@ -722,10 +723,9 @@ function prevSetlistSong(){
   setlistPos--;openSong(setlist[setlistPos]);
 }
 function persistSetlist(){
-  if(window.electronAPI)localStorage.setItem('cancionero_setlist',JSON.stringify(setlist));
-  else db.collection('cancionero').doc('data').set({setlist:setlist},{merge:true}).catch(console.error);
+  db.collection('cancionero').doc('data').set({setlist:setlist},{merge:true}).catch(console.error);
 }
-function loadSetlist(){try{const s=localStorage.getItem('cancionero_setlist');if(s)setlist=JSON.parse(s)}catch{}}
+function loadSetlist(){}
 
 /* KEYBOARD */
 document.addEventListener('keydown',e=>{
@@ -748,24 +748,18 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 (async()=>{
-  if(window.electronAPI){
-    const songs=await window.electronAPI.loadSongs();
-    allSongs=songs||JSON.parse(JSON.stringify(INITIAL_SONGS));
-    loadSetlist();
-  }else{
-    try{
-      const doc=await db.collection('cancionero').doc('data').get();
-      if(doc.exists){
-        allSongs=doc.data().songs||JSON.parse(JSON.stringify(INITIAL_SONGS));
-        setlist=doc.data().setlist||[];
-      }else{
-        allSongs=JSON.parse(JSON.stringify(INITIAL_SONGS));
-        db.collection('cancionero').doc('data').set({songs:allSongs,setlist:[]}).catch(console.error);
-      }
-    }catch(e){
-      console.error('Firebase:',e);
+  try{
+    const doc=await db.collection('cancionero').doc('data').get();
+    if(doc.exists){
+      allSongs=doc.data().songs||JSON.parse(JSON.stringify(INITIAL_SONGS));
+      setlist=doc.data().setlist||[];
+    }else{
       allSongs=JSON.parse(JSON.stringify(INITIAL_SONGS));
+      db.collection('cancionero').doc('data').set({songs:allSongs,setlist:[]}).catch(console.error);
     }
+  }catch(e){
+    console.error('Firebase:',e);
+    allSongs=JSON.parse(JSON.stringify(INITIAL_SONGS));
   }
   renderList(allSongs)
 })();
