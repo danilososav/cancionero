@@ -292,6 +292,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   <header class="editor-header">
     <button class="btn btn-outline" onclick="showHome()">&#8592; Volver</button>
     <span class="editor-htitle" id="editorTitle">Agregar cancion</span>
+    <button class="btn btn-danger" id="edDelBtn" style="display:none;margin-left:auto" onclick="confirmDelete(editingIdx)">&#128465; Eliminar cancion</button>
   </header>
   <div class="ed-top">
     <div class="ed-field-sm">
@@ -575,6 +576,7 @@ function openEditor(idx){
   editingIdx=idx;currentTypes=[];
   const isNew=idx===-1;
   document.getElementById('editorTitle').textContent=isNew?'Agregar cancion':'Editar cancion';
+  document.getElementById('edDelBtn').style.display=isNew?'none':'';
   if(isNew){
     document.getElementById('newTitle').value='';
     document.getElementById('newKey').value='';
@@ -621,7 +623,7 @@ function doDelete(){
   const name=allSongs[pendingDeleteIdx].title;
   allSongs.splice(pendingDeleteIdx,1);persistSongs();closeConfirm();
   showToast('"'+name+'" eliminada');
-  filterSongs(document.getElementById('searchInput').value)
+  showHome();
 }
 
 /* EXPORT */
