@@ -185,6 +185,37 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* RESPONSIVE MOBILE */
+@media(max-width:640px){
+  .home-header{padding:.6rem .9rem;flex-wrap:wrap;gap:.45rem}
+  .app-title{font-size:1rem}
+  .search-wrap{order:3;width:100%}
+  .hdr-btns{margin-left:auto;gap:.3rem}
+  .btn{padding:.42rem .6rem;font-size:.75rem}
+  #exportBtn{display:none}
+  .song-list{padding:.7rem .6rem}
+  .song-item{padding:.7rem .65rem;gap:.55rem}
+  .si-num{width:1.2rem}
+  .si-action-btn{display:none}
+  .sl-panel{width:100vw;right:-100vw}
+  .sl-panel.open{right:0}
+  .ed-top{padding:.8rem 1rem .5rem;flex-wrap:wrap}
+  .ed-cols{grid-template-columns:1fr}
+  .ed-left{border-right:none;border-bottom:1px solid var(--border);max-height:45vh}
+  .editor-header{padding:.8rem 1rem}
+  .ed-footer{padding:.7rem 1rem}
+  .pres-topbar,.pres-botbar{padding:.7rem 1rem}
+  .keys-hint{display:none!important}
+  .pres-dots{gap:4px}
+  .dot{width:5px;height:5px}
+  .dot.active{width:16px}
+}
+/* Touch: mostrar controles de presentación siempre (hover no funciona en táctil) */
+@media(hover:none){
+  .pres-wrap .pres-topbar,.pres-wrap .pres-botbar{opacity:1}
+  .pres-wrap .pres-triggers{opacity:1}
+}
 </style>
 </head>
 <body>
@@ -201,7 +232,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       <button class="btn btn-outline" id="sortBtn" onclick="toggleSort()" title="Ordenar A-Z">A&#8209;Z</button>
       <button class="btn btn-outline" id="cultoBtn" onclick="toggleSetlistPanel()">&#9776; Culto</button>
       <button class="btn btn-outline" onclick="openEditor(-1)">+ Agregar</button>
-      <button class="btn btn-outline" onclick="exportHTML()">&#8595; Exportar</button>
+      <button class="btn btn-outline" id="exportBtn" onclick="exportHTML()">&#8595; Exportar</button>
     </div>
   </header>
   <main class="song-list" id="songList"></main>
@@ -688,6 +719,11 @@ document.addEventListener('keydown',e=>{
   }
   if(document.getElementById('confirmOverlay').classList.contains('show')&&e.key==='Escape')closeConfirm()
 })
+
+/* TOUCH SWIPE presentación */
+let _touchX=0;
+document.getElementById('presentation').addEventListener('touchstart',e=>{_touchX=e.touches[0].clientX},{passive:true});
+document.getElementById('presentation').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-_touchX;if(Math.abs(dx)>50)navigate(dx<0?1:-1)},{passive:true});
 
 /* TOAST */
 let toastTimer;
