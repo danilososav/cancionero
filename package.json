@@ -1,0 +1,14 @@
+{
+  "name": "cancionero",
+  "version": "1.0.0",
+  "description": "Cancionero Club",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-packager . Cancionero --platform=win32 --arch=x64 --overwrite --out=dist --ignore=node_modules/.cache --ignore=dist --ignore=servidor.py --ignore=servidor.bat"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-packager": "^17.1.2"
+  }
+}

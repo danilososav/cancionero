@@ -1,0 +1,8 @@
+node_modules/
+dist/
+songs_extracted.json
+extract_songs.py
+servidor.py
+servidor.bat
+Cancionero-Club.zip
+Cancionero Club.pptx

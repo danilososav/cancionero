@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cancionero Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@600;700;800&family=Lora:wght@600;700&family=Raleway:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07070f;--surface:#111120;--surface2:#17172a;--border:#22223a;--text:#f0f0ff;--text-dim:#55557a;--text-mid:#8888b0;--accent:#6c63ff;--coro:#f5c842;--coro-bg:rgba(245,200,66,0.08);--coro-bd:rgba(245,200,66,0.25);--puente:#42d4c8;--puente-bg:rgba(66,212,200,0.08);--puente-bd:rgba(66,212,200,0.25);--verso-bg:rgba(255,255,255,0.06);--verso-bd:rgba(255,255,255,0.18);--danger:#e05555}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif}
+.screen{display:none;height:100vh;width:100vw;flex-direction:column}
+.screen.active{display:flex}
+
+/* HOME */
+.home-header{display:flex;align-items:center;gap:1rem;padding:1.2rem 2rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.app-title{font-size:1.2rem;font-weight:800;letter-spacing:-.03em;white-space:nowrap}
+.app-title span{color:var(--accent)}
+.search-wrap{flex:1;position:relative}
+.search-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:.6rem 1rem .6rem 2.4rem;border-radius:9px;font-family:inherit;font-size:.92rem;outline:none;transition:border-color .2s}
+.search-input::placeholder{color:var(--text-dim)}
+.search-input:focus{border-color:var(--accent)}
+.search-icon{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none}
+.hdr-btns{display:flex;gap:.5rem}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1rem;border-radius:8px;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;border:none;white-space:nowrap;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.12)}
+.btn-outline{background:transparent;color:var(--text-mid);border:1px solid var(--border)}
+.btn-outline:hover{color:var(--text);border-color:var(--text-mid)}
+.song-list{flex:1;overflow-y:auto;padding:1.2rem 1.5rem}
+.list-header{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);padding:0 .6rem;margin-bottom:.6rem}
+.song-item{display:flex;align-items:center;gap:.9rem;padding:.85rem .9rem;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:all .14s}
+.song-item:hover{background:var(--surface);border-color:var(--border)}
+.si-num{font-size:.75rem;color:var(--text-dim);width:1.6rem;text-align:right;flex-shrink:0}
+.si-info{flex:1;min-width:0}
+.si-name{font-size:1rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.si-meta{font-size:.72rem;color:var(--text-dim);margin-top:.1rem}
+.si-key{background:var(--surface2);border:1px solid var(--border);color:var(--text-mid);padding:.18rem .5rem;border-radius:5px;font-size:.72rem;font-weight:700;flex-shrink:0}
+.si-actions{display:flex;gap:.3rem;flex-shrink:0}
+.si-action-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;transition:all .14s;font-family:inherit}
+.si-action-btn:hover{color:var(--text);border-color:var(--text-mid);background:var(--surface2)}
+.si-action-btn.del:hover{color:var(--danger);border-color:var(--danger)}
+.si-arrow{color:var(--text-dim);opacity:1;font-size:1.1rem;flex-shrink:0;transition:opacity .14s}
+.no-results{text-align:center;padding:4rem 1rem;color:var(--text-dim);font-size:.9rem}
+
+/* PRESENTATION */
+#presentation{background:#000;position:relative;align-items:center;justify-content:center}
+.pres-wrap{position:absolute;inset:0;display:flex;flex-direction:column}
+.pres-topbar,.pres-botbar{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.6rem;opacity:0;transition:opacity .3s;flex-shrink:0}
+.pres-wrap:hover .pres-topbar,.pres-wrap:hover .pres-botbar{opacity:1}
+.pres-topbar{background:linear-gradient(to bottom,rgba(0,0,0,.65),transparent)}
+.pres-botbar{background:linear-gradient(to top,rgba(0,0,0,.65),transparent);justify-content:center;gap:1rem}
+.pres-song-title{font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.pres-slide-counter{font-size:.78rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.pres-close{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
+.pres-close:hover{background:rgba(255,255,255,.18);color:#fff}
+.pres-stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.5rem 3%;text-align:center;overflow:hidden}
+.strophe-tag{font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:1.4rem;padding:.28rem .85rem;border-radius:20px;border:1px solid transparent}
+.strophe-tag.VERSO{color:rgba(255,255,255,.35);border-color:rgba(255,255,255,.1)}
+.strophe-tag.CORO{color:var(--coro);background:var(--coro-bg);border-color:var(--coro-bd)}
+.strophe-tag.PUENTE{color:var(--puente);background:var(--puente-bg);border-color:var(--puente-bd)}
+.strophe-tag.none{display:none}
+.pres-lyrics{color:#fff;font-weight:600;line-height:1.55;white-space:pre;letter-spacing:.01em}
+.nav-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.8);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;flex-shrink:0}
+.nav-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+.nav-btn:disabled{opacity:.2;pointer-events:none}
+.pres-dots{display:flex;gap:6px;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.22);cursor:pointer;transition:all .22s}
+.dot.active{background:#fff;width:20px;border-radius:3px}
+.pres-indicator{position:absolute;bottom:1rem;left:1.4rem;font-size:.68rem;font-weight:600;color:rgba(255,255,255,.22);letter-spacing:.06em;pointer-events:none;z-index:1;line-height:1.4}
+.keys-hint{position:absolute;bottom:1rem;right:1.5rem;font-size:.65rem;color:rgba(255,255,255,.18);opacity:0;transition:opacity .3s}
+.pres-wrap:hover .keys-hint{opacity:1}
+.pres-triggers{position:absolute;bottom:4.5rem;right:1.2rem;display:flex;flex-direction:column;gap:.5rem;opacity:0;transition:opacity .3s}
+.pres-wrap:hover .pres-triggers{opacity:1}
+.pres-trig-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;letter-spacing:.03em}
+.pres-trig-btn:hover,.pres-trig-btn.open{background:rgba(255,255,255,.22);color:#fff;border-color:rgba(255,255,255,.5)}
+.pres-panel{position:absolute;right:3.4rem;background:rgba(20,20,40,.92);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:.7rem;display:none;flex-direction:column;gap:.45rem;align-items:center;backdrop-filter:blur(12px)}
+.pres-panel.open{display:flex}
+.pres-ctrl-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
+.pres-ctrl-btn:hover{background:rgba(255,255,255,.25)}
+.pres-ctrl-sep{width:24px;height:1px;background:rgba(255,255,255,.15);margin:.1rem 0}
+.color-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0}
+.color-dot:hover,.color-dot.active{border-color:#fff;transform:scale(1.15)}
+
+/* EDITOR */
+#editor{background:var(--bg)}
+.editor-header{display:flex;align-items:center;gap:1rem;padding:1.1rem 2rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.editor-htitle{font-size:1rem;font-weight:700}
+.editor-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.ed-top{display:flex;gap:1rem;padding:1.2rem 2rem .8rem;flex-shrink:0}
+.ed-field-sm{display:flex;flex-direction:column;gap:.35rem}
+.ed-field-sm:first-child{flex:1;max-width:420px}
+.field-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim)}
+.field-input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:.65rem .9rem;border-radius:8px;font-family:inherit;font-size:.9rem;outline:none;transition:border-color .2s;width:100%}
+.field-input:focus{border-color:var(--accent)}
+.field-input::placeholder{color:var(--text-dim)}
+.ed-cols{flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;overflow:hidden;border-top:1px solid var(--border)}
+.ed-left{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
+.ed-col-label{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);padding:.7rem 1.5rem .5rem;flex-shrink:0;border-bottom:1px solid var(--border)}
+.field-textarea{flex:1;background:transparent;border:none;color:var(--text);padding:1rem 1.5rem;font-family:inherit;font-size:.88rem;outline:none;resize:none;line-height:1.75;overflow-y:auto}
+.field-textarea::placeholder{color:var(--text-dim)}
+.ed-right{display:flex;flex-direction:column;overflow:hidden;background:var(--surface)}
+.preview-scroll{flex:1;overflow-y:auto;padding:.8rem 1rem}
+
+/* STROPHE BLOCKS IN PREVIEW */
+.prev-block{border:1px solid var(--border);border-radius:10px;padding:.75rem .9rem;margin-bottom:.6rem;background:var(--bg);transition:border-color .2s}
+.prev-block.over-limit{border-color:var(--danger);background:rgba(224,85,85,.06)}
+.line-counter{font-size:.62rem;font-weight:700;color:var(--text-dim);margin-left:.5rem;flex-shrink:0}
+.line-counter.warn{color:var(--danger)}
+.prev-block:last-child{margin-bottom:0}
+.type-pills{display:flex;gap:.35rem;margin-bottom:.6rem;flex-wrap:wrap}
+.type-pill{padding:.2rem .65rem;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-size:.62rem;font-weight:700;letter-spacing:.08em;font-family:inherit;transition:all .15s;text-transform:uppercase}
+.type-pill:hover{border-color:var(--text-mid);color:var(--text)}
+.type-pill.sel-VERSO{background:var(--verso-bg);border-color:var(--verso-bd);color:rgba(255,255,255,.85)}
+.type-pill.sel-CORO{background:var(--coro-bg);border-color:var(--coro-bd);color:var(--coro)}
+.type-pill.sel-PUENTE{background:var(--puente-bg);border-color:var(--puente-bd);color:var(--puente)}
+.prev-text{font-size:.8rem;color:rgba(255,255,255,.55);white-space:pre-wrap;line-height:1.55}
+.block-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.move-btns{display:flex;gap:.25rem}
+.move-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);width:24px;height:24px;border-radius:5px;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all .14s;line-height:1}
+.move-btn:hover{color:var(--text);border-color:var(--text-mid);background:var(--surface2)}
+.move-btn:disabled{opacity:.2;pointer-events:none}
+.copy-btn{color:var(--accent);border-color:rgba(108,99,255,.3)}
+.copy-btn:hover{color:#fff;border-color:var(--accent);background:var(--accent) !important}
+.del-btn{color:var(--danger);border-color:rgba(224,85,85,.3)}
+.del-btn:hover{color:#fff;border-color:var(--danger);background:var(--danger) !important}
+.ed-footer{padding:.9rem 1.5rem;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;gap:.8rem}
+.ed-hint{font-size:.75rem;color:var(--text-dim);flex:1}
+.ed-hint strong{color:var(--text-mid)}
+
+/* CONFIRM */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.dialog{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.8rem;max-width:360px;width:90%;text-align:center}
+.dialog h3{font-size:1rem;font-weight:700;margin-bottom:.5rem}
+.dialog p{font-size:.85rem;color:var(--text-mid);margin-bottom:1.5rem;line-height:1.5}
+.dialog-btns{display:flex;gap:.7rem;justify-content:center}
+.btn-danger{background:var(--danger);color:#fff;border:none}
+.btn-danger:hover{filter:brightness(1.1)}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.anim{animation:fadeIn .18s ease forwards}
+
+/* SETLIST PANEL */
+.sl-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:49}
+.sl-backdrop.show{display:block}
+.sl-panel{position:fixed;top:0;right:-360px;width:340px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:50;display:flex;flex-direction:column;transition:right .28s cubic-bezier(.4,0,.2,1);box-shadow:-10px 0 40px rgba(0,0,0,.5)}
+.sl-panel.open{right:0}
+.sl-hdr{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.sl-hdr-title{font-size:.95rem;font-weight:700}
+.sl-x{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:1.1rem;padding:.2rem;line-height:1;font-family:inherit}
+.sl-body{flex:1;overflow-y:auto;padding:.8rem 1rem}
+.sl-empty{text-align:center;color:var(--text-dim);font-size:.84rem;padding:3rem 1rem;line-height:1.7}
+.sl-item{display:flex;align-items:center;gap:.5rem;padding:.55rem .65rem;border-radius:8px;border:1px solid var(--border);margin-bottom:.45rem;background:var(--bg);transition:border-color .15s}
+.sl-item.sl-current{border-color:var(--accent);background:rgba(108,99,255,.07)}
+.sl-pos{font-size:.7rem;color:var(--text-dim);width:1.2rem;text-align:center;flex-shrink:0}
+.sl-name{flex:1;font-size:.86rem;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl-key{font-size:.68rem;color:var(--text-dim);flex-shrink:0;background:var(--surface2);border:1px solid var(--border);padding:.12rem .38rem;border-radius:4px}
+.sl-acts{display:flex;gap:.2rem;flex-shrink:0}
+.sl-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);width:22px;height:22px;border-radius:5px;cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all .14s;line-height:1}
+.sl-btn:hover{color:var(--text);border-color:var(--text-mid);background:var(--surface2)}
+.sl-btn.rm:hover{color:var(--danger);border-color:var(--danger)}
+.sl-btn:disabled{opacity:.2;pointer-events:none}
+.sl-footer{padding:1rem 1.4rem;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:.55rem}
+.sl-count{font-size:.72rem;color:var(--text-dim);text-align:center}
+.si-sl-btn{background:transparent;border:1px solid var(--border);color:var(--text-dim);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .14s;font-family:inherit;flex-shrink:0}
+.si-sl-btn:hover{color:var(--accent);border-color:var(--accent);background:rgba(108,99,255,.08)}
+.si-sl-btn.in-sl{color:var(--accent);border-color:var(--accent);background:rgba(108,99,255,.12)}
+
+/* Presentation setlist nav */
+.pres-botbar{position:relative}
+.pres-song-nav{position:absolute;top:50%;transform:translateY(-50%);display:none;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);padding:.3rem .65rem;border-radius:8px;cursor:pointer;font-size:.62rem;font-weight:700;font-family:inherit;letter-spacing:.05em;align-items:center;gap:.3rem;opacity:0;transition:opacity .3s}
+.pres-wrap.sl-mode .pres-song-nav{display:flex}
+.pres-wrap:hover .pres-song-nav{opacity:1}
+.pres-song-nav:hover{background:rgba(255,255,255,.2);color:#fff}
+.pres-song-nav:disabled{opacity:.15!important;pointer-events:none}
+#songPrevBtn{left:1rem}
+#songNextBtn{right:1rem}
+.pres-sl-pos{display:none;font-size:.6rem;font-weight:700;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.2rem}
+.pres-wrap.sl-mode .pres-sl-pos{display:block}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:.6rem 1.4rem;border-radius:30px;font-size:.82rem;font-weight:500;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <header class="home-header">
+    <div class="app-title">Cancionero<span>.</span></div>
+    <div class="search-wrap">
+      <span class="search-icon">&#128269;</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Buscar cancion..." autocomplete="off" oninput="filterSongs(this.value)">
+    </div>
+    <div class="hdr-btns">
+      <button class="btn btn-outline" id="sortBtn" onclick="toggleSort()" title="Ordenar A-Z">A&#8209;Z</button>
+      <button class="btn btn-outline" id="cultoBtn" onclick="toggleSetlistPanel()">&#9776; Culto</button>
+      <button class="btn btn-outline" onclick="openEditor(-1)">+ Agregar</button>
+      <button class="btn btn-outline" onclick="exportHTML()">&#8595; Exportar</button>
+    </div>
+  </header>
+  <main class="song-list" id="songList"></main>
+</div>
+
+<!-- PRESENTATION -->
+<div id="presentation" class="screen">
+  <div class="pres-wrap">
+    <div class="pres-topbar">
+      <span class="pres-song-title" id="presSongTitle"></span>
+      <div style="display:flex;align-items:center;gap:.8rem">
+        <span class="pres-slide-counter" id="presCounter"></span>
+        <button class="pres-close" onclick="showHome()">&#10005;</button>
+      </div>
+    </div>
+    <div class="pres-stage">
+      <div class="strophe-tag" id="stropheTag"></div>
+      <div class="pres-lyrics" id="presLyrics"></div>
+    </div>
+    <div class="pres-botbar">
+      <button class="pres-song-nav" id="songPrevBtn" onclick="prevSetlistSong()">&#9664;&#9664; Canción ant.</button>
+      <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">&#8592;</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem">
+        <span class="pres-sl-pos" id="slPos"></span>
+        <div class="pres-dots" id="presDots"></div>
+      </div>
+      <button class="nav-btn" id="nextBtn" onclick="navigate(1)">&#8594;</button>
+      <button class="pres-song-nav" id="songNextBtn" onclick="nextSetlistSong()">Sig. canción &#9654;&#9654;</button>
+    </div>
+    <div class="pres-triggers">
+      <!-- Panel letra -->
+      <div class="pres-panel" id="panelLetra" style="top:0">
+        <div class="color-dot active" id="cdot-fff" style="background:#fff" onclick="setPresColor('#fff','cdot-fff')" title="Blanco"></div>
+        <div class="color-dot" id="cdot-ffe" style="background:#FFE566" onclick="setPresColor('#FFE566','cdot-ffe')" title="Amarillo"></div>
+        <div class="color-dot" id="cdot-6de" style="background:#6DE0FF" onclick="setPresColor('#6DE0FF','cdot-6de')" title="Celeste"></div>
+        <div class="pres-ctrl-sep"></div>
+        <button class="pres-ctrl-btn" style="font-size:.6rem;font-family:'Montserrat',sans-serif" onclick="setPresFont('Montserrat','fbtn-mon')" id="fbtn-mon" title="Montserrat">Aa</button>
+        <button class="pres-ctrl-btn" style="font-size:.6rem;font-family:'Lora',serif" onclick="setPresFont('Lora','fbtn-lor')" id="fbtn-lor" title="Lora">Aa</button>
+        <button class="pres-ctrl-btn" style="font-size:.6rem;font-family:'Raleway',sans-serif" onclick="setPresFont('Raleway','fbtn-ral')" id="fbtn-ral" title="Raleway">Aa</button>
+      </div>
+      <button class="pres-trig-btn" id="trigLetra" onclick="togglePanel('panelLetra','trigLetra')" title="Letra">T</button>
+      <!-- Panel fondo -->
+      <div class="pres-panel" id="panelFondo" style="top:3.2rem">
+        <div class="color-dot active" id="bdot-000" style="background:#000;border-color:rgba(255,255,255,.5)" onclick="setPresBg('#000','bdot-000')" title="Negro"></div>
+        <div class="color-dot" id="bdot-nav" style="background:#0a0a2e" onclick="setPresBg('#0a0a2e','bdot-nav')" title="Azul oscuro"></div>
+        <div class="color-dot" id="bdot-pur" style="background:#1a0a2e" onclick="setPresBg('#1a0a2e','bdot-pur')" title="Morado oscuro"></div>
+      </div>
+      <button class="pres-trig-btn" id="trigFondo" onclick="togglePanel('panelFondo','trigFondo')" title="Fondo">F</button>
+    </div>
+    <div class="pres-indicator" id="presIndicator"></div>
+    <div class="keys-hint">&#8592; &#8594; navegar &nbsp;|&nbsp; Espacio avanzar &nbsp;|&nbsp; Esc volver</div>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div id="editor" class="screen">
+  <header class="editor-header">
+    <button class="btn btn-outline" onclick="showHome()">&#8592; Volver</button>
+    <span class="editor-htitle" id="editorTitle">Agregar cancion</span>
+  </header>
+  <div class="ed-top">
+    <div class="ed-field-sm">
+      <label class="field-label">Titulo de la cancion</label>
+      <input class="field-input" id="newTitle" type="text" placeholder="Ej: Gracia Sublime">
+    </div>
+    <div class="ed-field-sm">
+      <label class="field-label">Tonalidad</label>
+      <input class="field-input" id="newKey" type="text" placeholder="Ej: D, Am..." style="width:90px">
+    </div>
+  </div>
+  <div class="ed-cols">
+    <div class="ed-left">
+      <div class="ed-col-label">Letra — separa estrofas con una linea en blanco</div>
+      <textarea class="field-textarea" id="newLyrics" placeholder="Pega o escribi la letra aca...
+
+Cada vez que dejas una linea en blanco
+se crea una nueva diapositiva.
+
+Despues podes etiquetar cada parte
+como CORO, VERSO o PUENTE desde
+la columna de la derecha." oninput="updatePreview()"></textarea>
+    </div>
+    <div class="ed-right">
+      <div class="ed-col-label">Etiquetas — hace clic para etiquetar cada parte</div>
+      <div class="preview-scroll" id="previewBox">
+        <div style="color:var(--text-dim);font-size:.8rem;padding:1rem 0;text-align:center;opacity:.5">Las partes aparecen aca cuando escribis la letra</div>
+      </div>
+    </div>
+  </div>
+  <div class="ed-footer">
+    <div class="ed-hint"><strong>Tip:</strong> Cada parrafo = una diapositiva. Etiqueta cada parte haciendo clic en VERSO / CORO / PUENTE.</div>
+    <button class="btn btn-primary" onclick="saveSong()">Guardar cancion</button>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="overlay" id="confirmOverlay">
+  <div class="dialog">
+    <h3>Eliminar cancion</h3>
+    <p id="confirmMsg">Seguro que queres eliminar esta cancion?</p>
+    <div class="dialog-btns">
+      <button class="btn btn-outline" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- SETLIST PANEL -->
+<div class="sl-backdrop" id="slBackdrop" onclick="closeSetlistPanel()"></div>
+<div class="sl-panel" id="slPanel">
+  <div class="sl-hdr">
+    <span class="sl-hdr-title">&#9776; Orden del culto</span>
+    <button class="sl-x" onclick="closeSetlistPanel()">&#10005;</button>
+  </div>
+  <div class="sl-body" id="slBody">
+    <div class="sl-empty">Agregá canciones al culto<br>usando el botón <strong>+</strong> en cada canción.</div>
+  </div>
+  <div class="sl-footer">
+    <span class="sl-count" id="slCount"></span>
+    <button class="btn btn-primary" id="slStartBtn" onclick="presentSetlist()" disabled style="justify-content:center">&#9654; Iniciar culto</button>
+    <button class="btn btn-outline" onclick="clearSetlist()" style="justify-content:center;font-size:.78rem">Limpiar lista</button>
+  </div>
+</div>
+
+<script>
+const INITIAL_SONGS=/* SONGS_START */[{"title":"Gracia Sublime","key":"D","strophes":[{"type":"VERSO","text":"¿Quien rompe el poder del pecado?\nsu amor es fuerte y poderoso\nEl Rey de Gloria el Rey de Majestad"},{"type":"VERSO","text":"Conmueve al mundo con su estruendo\nY nos asombra con maravillas\nEl Rey de Gloria el Rey de Majestad"},{"type":"VERSO","text":"Pusiste en orden todo el caos\nNos adoptaste como tus hijos\nEl Rey de gloria el Rey de Majestad"},{"type":"VERSO","text":"El que gobierna con su justicia\nY resplandece con su belleza\nEl Rey de Gloria el Rey de Majestad"},{"type":"VERSO","text":"Digno es el Cordero de Dios,\nDigno es el Rey que la muerte venció"},{"type":"CORO","text":"Gracia sublime es perfecto es tu amor\nTomaste mi lugar cargaste tu mi cruz\nTu vida diste ahí y ahora libre soy"},{"type":"CORO","text":"Jesús te adoro por lo que hiciste en mí"}]},{"title":"Hay Libertad","key":"A","strophes":[{"type":"VERSO","text":"Hay Libertad (A)"},{"type":"VERSO","text":"Las cadenas de la muerte me quitó\nPara mi ya no hay condenación\nHay libertad, libertad"},{"type":"VERSO","text":"Siendo esclavo del pecado me libró\nEn la cruz compró mi redención\nY libertad, libertad"},{"type":"CORO","text":"Rompió mis cadenas, me dió vida nueva\nY al fondo del mar echó mi maldad\nLavó mis pecados y me ha perdonado"},{"type":"CORO","text":"Sólo en el nombre de Jesús\nHay libertad"},{"type":"VERSO","text":"Yo proclamo al que en la cruz por mi murió\nY cambió mi duro corazón\nPor libertad, libertad"},{"type":"VERSO","text":"El poder de su evangelio me salvó\nY no me avergüenzo del Señor\nMi libertad, libertad"},{"type":"VERSO","text":"/ Al que el Hijo hace libre\nEs libre en verdad\nAl que el Hijo hace libre"},{"type":"VERSO","text":"Es libre en verdad /"}]},{"title":"El te sostiene","key":"","strophes":[{"type":"VERSO","text":"El te sostiene"},{"type":"VERSO","text":"La gente pregunta por qué defiendes tu fe\nTe dicen que no, que no existe Dios\nPensabas que no iba a pasar que todo iba bien"},{"type":"VERSO","text":"Mas no callarás, no te callarán"},{"type":"VERSO","text":"No es fácil, no\nPonerse de pie y creer\nCuando solo estés"},{"type":"VERSO","text":"Recuerda que"},{"type":"VERSO","text":"Él va contigo Un camino abrirá a tus pies\nDe día y de noche Su fuego arderá en tu ser\nY cuando el mundo intente robar tu fe"},{"type":"VERSO","text":"Él te sostiene\nY no te dejará caer\nNo te dejará caer"},{"type":"VERSO","text":"El miedo en tus ojos se ve\nNo quieres fallar\nNo vas a parar"},{"type":"VERSO","text":"No te rendirás\nCuando te intenten callar\nTu voz apagar"},{"type":"VERSO","text":"No tengas temor\nLevanta tu voz"}]},{"title":"Mi Fortaleza","key":"D","strophes":[{"type":"VERSO","text":"Tú eres Señor\nMi Fortaleza\nComo ninguna"},{"type":"VERSO","text":"Vives en mí"},{"type":"VERSO","text":"Tú eres Señor\nMi esperanza\nComo ninguna"},{"type":"VERSO","text":"Vives en mí"},{"type":"VERSO","text":"Gracia que me levantó\nNombre que me restauró\nHas sido fiel"},{"type":"VERSO","text":"Has sido fiel"},{"type":"VERSO","text":"Perfecto amor\nInagotable\nIncomparable"},{"type":"VERSO","text":"Vives en mí"},{"type":"VERSO","text":"/Gracia que me levantó\nNombre que me restauró\nHas sido fiel"},{"type":"VERSO","text":"Has sido fiel/"},{"type":"VERSO","text":"/Tu amor Señor\nLlega hasta los cielos\nTu fidelidad"},{"type":"VERSO","text":"Nunca fallará/"},{"type":"VERSO","text":"Tú eres Señor\nMi Fortaleza\nComo ninguna"},{"type":"VERSO","text":"Vives en mí"},{"type":"VERSO","text":"Tú eres Señor\nMi esperanza\nComo ninguna"},{"type":"VERSO","text":"Vives en mí"}]},{"title":"Vivo estás","key":"Em","strophes":[{"type":"VERSO","text":"Roto estaba mi corazón\nPero tu mano me rescató\nDel polvo, yo volví a nacer"},{"type":"VERSO","text":"La salvación en Ti encontré"},{"type":"VERSO","text":"Tu amor no puedo expresar\nTe seguiré por la eternidad\nEn tu gracia caminaré"},{"type":"VERSO","text":"En libertad siempre viviré"},{"type":"CORO","text":"Sí, en Ti, en Ti, en Ti, soy libre\nSé exaltado, sé exaltado\nTu amor, tu amor, tu amor no se acaba"},{"type":"CORO","text":"Oh-oh-oh, oh\nTú vivo estás en mí\nNo hay nadie en tu lugar"},{"type":"CORO","text":"Te necesito Dios\nEres mi libertad, oh-ouh-oh"},{"type":"VERSO","text":"Al pasar por la oscuridad\nSu luz siempre me guiará\nMis cadenas Jesús rompió"},{"type":"VERSO","text":"Con su mano me rescató\nEste mundo terminará\nTe seguiré hasta el final"},{"type":"VERSO","text":"Haz en mí, Dios tu voluntad\nVenga tu reino a este lugar"}]},{"title":"Tu amor me inundó","key":"D","strophes":[{"type":"VERSO","text":"Ante Ti hoy me encuentro\nY postrado me presento\nTu esplendor me conquistó"},{"type":"VERSO","text":"Con tu paz me abrazas\nMe rodeas con tu gracia\nTu amor me inundó"},{"type":"CORO","text":"Me acerco a Ti\nTe abro mi corazón\nMi vida tuya es"},{"type":"CORO","text":"Ya no hay temor\nMe rindo a Ti\nMe humillo ante tu amor"},{"type":"CORO","text":"Oh, tu amor"},{"type":"VERSO","text":"Si me pierdo Tú me encuentras\nY levantas mi cabeza\nPuedo ver tu majestad"},{"type":"VERSO","text":"Me refugio en tu presencia\nMe cautiva tu belleza\nQuiero estar, donde tu estás"},{"type":"CORO","text":"Profundo amor\nQue lava mi interior\nEscucha mi clamor"},{"type":"CORO","text":"Te necesito Dios\nCantaré\nMi voz levantaré"},{"type":"CORO","text":"Jesús te buscaré\nTu rostro quiero ver"}]},{"title":"Glorioso día","key":"A","strophes":[{"type":"VERSO","text":"Mi vergüenza me sepultó\nYo buscaba un Salvador\nMás tu perdón, me liberó"},{"type":"VERSO","text":"Muerto estaba en mi interior\nMe escondía de ti Señor\nMás tu perdón, me liberó"},{"type":"CORO","text":"Tu voz me habló...\nY a la muerte venció"},{"type":"VERSO","text":"Glorioso Día, tu sangre me rescató\nTu voz me habló"},{"type":"VERSO","text":"Y a la muerte venció\nGlorioso Día, tu sangre me rescató"},{"type":"VERSO","text":"Ahora libre soy en tu amor\nEs tu Gracia la que me sanó\nMás tu perdón, a mí me liberó"},{"type":"CORO","text":"De mi pecado me rescataste\nEn tu gloria cadenas se rompen\nVivía solo y sin consuelo"},{"type":"CORO","text":"Ahora soy ciudadano del cielo"},{"type":"VERSO","text":"Tu me sanaste estando herido\nJesús por tu amor yo respiro\nTengo futuro, ahora veo"},{"type":"VERSO","text":"Porque tú VOZ me habló..."}]},{"title":"Dios Incomparable","key":"A","strophes":[{"type":"VERSO","text":"Dios Incomparable (A)"},{"type":"VERSO","text":"Dios de mi corazón\nEn ti encontré mi salvación\nTu gloria y majestad"},{"type":"VERSO","text":"Quiero siempre contemplar"},{"type":"VERSO","text":"Tú eres mi adoración\nY mi eterna canción\nTodo mi interior"},{"type":"VERSO","text":"Es cautivado por tu amor"},{"type":"CORO","text":"Eres Dios eterno\nSolo tú eres bueno\nDios incomparable eres tú"},{"type":"CORO","text":"Nunca me separaré de tu gran amor\nEres mi Señor, mi salvador"},{"type":"VERSO","text":"/ Aleluya\nAleluya\nAleluya"},{"type":"VERSO","text":"Aleluya /"}]},{"title":"Me viniste a rescatar","key":"G","strophes":[{"type":"VERSO","text":"Vengo ante ti postrado\nCon todo mi ser te quiero ver\nTuyo soy, Señor"},{"type":"VERSO","text":"Mi vida pongo en tus manos\nDios de gracia, vengo en humildad\nEn tu presencia quiero estar"},{"type":"VERSO","text":"\\ Clamé\nMe oíste\nMe viniste a rescatar"},{"type":"VERSO","text":"Contigo quiero estar \\"},{"type":"VERSO","text":"Mi vida pongo en tus manos\nDios de gracia, vengo en humildad\nEn tu presencia quiero estar"},{"type":"VERSO","text":"/ Clamé\nMe oíste\nMe viniste a rescatar"},{"type":"VERSO","text":"Contigo quiero estar /"},{"type":"VERSO","text":"/ Con mi fe te exaltaré\nCon mi amor te exaltaré\nCon mi ser te exaltaré /"}]},{"title":"Desde mi Interior","key":"G","strophes":[{"type":"VERSO","text":"Mil veces te fallé, mas tú fuiste fiel\nTu gracia me levantó, me basta tu amor\nDios eterno, tu luz por siempre brillará"},{"type":"VERSO","text":"Y tu gloria, incomparable sin"},{"type":"VERSO","text":"Señor, tu voluntad permanecerá\nEn ti me quiero perder en adoración\nDios eterno, tu luz por siempre brillará"},{"type":"VERSO","text":"Y tu gloria, incomparable sin"},{"type":"VERSO","text":"De mi corazón te doy el control\nConsume todo mi interior, Dios\nJusticia y amor me abrazan, Señor"},{"type":"VERSO","text":"Te amo desde mi interior"},{"type":"VERSO","text":"Dios eterno, tu luz por siempre brillará\nY tu gloria, incomparable sin final\nEl clamor de mi ser es contigo estar"},{"type":"VERSO","text":"Desde mi interior mi alma clamará. Dios"}]},{"title":"Otra Oportunidad","key":"C","strophes":[{"type":"VERSO","text":"En dolor\nEn temor\nTu amor me encontró"},{"type":"VERSO","text":"En confusión sin dirección\nTu mano me escogió"},{"type":"VERSO","text":"Levanto mi voz\nProclamo tu amor\nSeguro estoy en ti"},{"type":"VERSO","text":"Jesús"},{"type":"VERSO","text":"Tú me salvaste\nMe perdonaste\nMe regalaste otra oportunidad"},{"type":"VERSO","text":"Y por tu gracia\nAhora soy libre\nMe regalaste otra oportunidad"},{"type":"VERSO","text":"Oh oh oh ooh\nOtra oportunidad"},{"type":"VERSO","text":"Ya no hay condenación\nTu sangre me compro\nDeclarare tu hijo soy"},{"type":"VERSO","text":"Soy más que vencedor"},{"type":"VERSO","text":"Levanto mi voz\nProclamo tu amor\nSeguro estoy en ti"},{"type":"VERSO","text":"Jesús"},{"type":"VERSO","text":"Con mi corazón\nTe alabaré\nCon todas mis fuerzas cantaré"},{"type":"VERSO","text":"Toda la creación\nCanta a una voz\nDeclaramos que eres rey"}]},{"title":"Castillo Fuerte","key":"Am","strophes":[{"type":"VERSO","text":"Castillo fuerte es nuestro Dios\nEscudo siempre fiel\nY en la prueba y tempestad"},{"type":"VERSO","text":"Es firme Su poder\nArmado está el enemigo cruel\nMás él caerá ante Jesús el Rey"},{"type":"CORO","text":"Confía en Dios, oh corazón\nÉl es fuerte para salvar\nConfía en Dios la roca es Él"},{"type":"CORO","text":"Tu refugio es castillo fuerte"},{"type":"VERSO","text":"En mis fuerzas yo no confiaré\nO en vano lucharé\nPues mi confianza está en Aquel"},{"type":"VERSO","text":"Que reina con poder\nPor mi pelea el Soberano Dios\nPor siempre la victoria Suya es"}]},{"title":"Mi Esperanza está en Jesús","key":"G","strophes":[{"type":"VERSO","text":"Cuán grande abismo entre nosotros\nCuán alto monte fallé a escalar\nCon desespero volví al cielo"},{"type":"VERSO","text":"Y en la noche te hice llamar"},{"type":"VERSO","text":"Allí, en lo oscuro, tu amor profundo\nCruzó las sombras y me alcanzó\nY has consumado el fin escrito"},{"type":"VERSO","text":"Mi esperanza está en Jesús"},{"type":"VERSO","text":"Quien imagina piedad tan grande\nTan plena gracia al corazón\nEl Dios eterno dejó su gloria"},{"type":"VERSO","text":"De mi pecado, Él se vistió"},{"type":"VERSO","text":"La cruz ha hablado, soy perdonado\nEl rey de reyes me adoptó\nSeñor hermoso, te pertenezco"},{"type":"VERSO","text":"Mi esperanza está en Jesús"},{"type":"CORO","text":"¡Oh, aleluya!, sea a quien me libertó\n¡Aleluya!, de la muerte me arrancó\nLas cadenas quebrantó y en su nombre hay salvación"},{"type":"CORO","text":"Mi esperanza está en Jesús"},{"type":"VERSO","text":"Y tus promesas fueron selladas\nCuando tu cuerpo resucitó\nDesde el silencio tu gran rugido"},{"type":"VERSO","text":"Quebró el poder de la muerte en mí"},{"type":"VERSO","text":"Y tus promesas fueron selladas\nCuando tu cuerpo resucitó\nDesde el silencio tu gran rugido"},{"type":"VERSO","text":"Quebró el poder de la muerte en mí\nLa victoria está en ti"}]},{"title":"No Hay Comparación","key":"E","strophes":[{"type":"VERSO","text":"Por su sangre fue pagado,\nEl precio de todo el pecado;\nCon ese acto de gran poder,"},{"type":"VERSO","text":"El mundo roto salvo fue."},{"type":"VERSO","text":"Aunque tu cuerpo quebrado fue,\nPor el pecado que había en mi ser;\nTu gracia fue mucho mas allá,"},{"type":"VERSO","text":"Ese acto hermoso nos dio libertad."},{"type":"CORO","text":"Jesús no hay comparación,\nQue iguale tan inmenso amor,\nQue cada clavo consumo,"},{"type":"CORO","text":"En el madero por amor."},{"type":"VERSO","text":"Siendo Dios inigualable,\nCon su poder incomparable;\nHasta la muerte se humilló,"},{"type":"VERSO","text":"No importó nada, solo nos amó."},{"type":"VERSO","text":"//Jesús, Dios redentor,\nQue al mundo fue y liberó\nJesús, Dios redentor,"},{"type":"VERSO","text":"Que una cruz, todo pago//."}]},{"title":"Aquí Estoy yo","key":"","strophes":[{"type":"VERSO","text":"No quiero perder\nLas cosas que me quedan por hacer\nLas cosas que me quedan por vivir"},{"type":"VERSO","text":"En ti"},{"type":"VERSO","text":"No quiero olvidar\nLas cosas que planeaste para mí\nLos sueños que me diste lo daré"},{"type":"VERSO","text":"Por ti"},{"type":"CORO","text":"No tienes que buscar a nadie más yo quiero ir\nAquí está mi tiempo y aquí están mi horas\nAquí estoy yo"},{"type":"CORO","text":"Mi vida es para ti y en ti la quiero yo invertir\nAquí están mis manos, aquí está mi voz\nAquí estoy yo"},{"type":"CORO","text":"Aquí estoy yo, ouh oh"},{"type":"VERSO","text":"Listo quiero estar\nLos dones que me diste voy usar\nLos años que me has dado viviré"},{"type":"VERSO","text":"Por ti"},{"type":"VERSO","text":"Voy a conquistar\nLa tierra que me diste y sin dudar\nHaré lo que me pidas, viviré"},{"type":"VERSO","text":"Por ti"}]},{"title":"Mi Dios puede salvar","key":"E","strophes":[{"type":"VERSO","text":"Todos necesitan\namor que nunca falla\ntu gracia y compasión."},{"type":"VERSO","text":"Todos necesitan\nperdón y esperanza\nY un Dios que salva."},{"type":"CORO","text":"Cristo puede mover montes\n¡Sólo Dios puede salvar,\nmi Dios puede salvar!"},{"type":"CORO","text":"Por siempre, autor de salvación\nJesús la muerte venció,\nÉl la muerte venció"},{"type":"VERSO","text":"Aun con mis temores\nsé que me aceptas\nLléname otra vez."},{"type":"VERSO","text":"Mi vida entera ofrezco\npara seguir tus pasos\nA Tí me rindo."},{"type":"VERSO","text":"//En la tierra,\nTu luz brillará\nCantamos por la gloria"},{"type":"VERSO","text":"de Tu majestad, Jesús//."}]},{"title":"Abres Camino","key":"","strophes":[{"type":"VERSO","text":"/ Aquí estás\nTe vemos mover\nTe adoraré"},{"type":"VERSO","text":"Te adoraré\nAquí estás\nObrando en mí"},{"type":"VERSO","text":"Te adoraré\nTe adoraré /"},{"type":"VERSO","text":"/ Milagroso\nAbres camino\nCumples promesas"},{"type":"VERSO","text":"Luz en tinieblas\nMi Dios, así eres tú /"},{"type":"VERSO","text":"/ Aquí estás\nSanando mi corazón\nTe adoraré"},{"type":"VERSO","text":"Te adoraré\nAquí estás\nTocando mi corazón"},{"type":"VERSO","text":"Te adoraré\nTe adoraré /"},{"type":"VERSO","text":"/ Así eres tú\nAsí eres tú\nAsí eres tú"},{"type":"VERSO","text":"Así eres tú /"},{"type":"VERSO","text":"/ Aunque no pueda ver\nEstás obrando\nAunque no pueda ver"},{"type":"VERSO","text":"Estás obrando\nSiempre estás\nSiempre estás obrando"},{"type":"VERSO","text":"Siempre estás\nSiempre estás obrando /"},{"type":"VERSO","text":"Aquí estás\nSanando mi corazón\nTe adoraré"},{"type":"VERSO","text":"Te adoraré\nAquí estás\nTocando mi corazón"},{"type":"VERSO","text":"Te adoraré\nTe adoraré"},{"type":"VERSO","text":"Aquí estás\nTe vemos mover\nTe adoraré"},{"type":"VERSO","text":"Te adoraré\nAquí estás\nObrando en mí"},{"type":"VERSO","text":"Te adoraré\nTe adoraré"}]},{"title":"Digo Si","key":"G","strophes":[{"type":"VERSO","text":"Eres rey de mi corazón\nDueño eres de mi canción\nSoy esclavo de tu amor"},{"type":"VERSO","text":"Tuyo soy"},{"type":"VERSO","text":"De ti nunca me soltaré\nY a tu lado yo viviré\nSolo quiero agradarte a ti"},{"type":"VERSO","text":"Con todo mi ser"},{"type":"CORO","text":"Me rindo a ti Jesús, soy tuyo\nMi corazón\nVivirá por ti"},{"type":"VERSO","text":"/ Digo sí a tu voluntad\nDigo sí a tu palpitar\nDigo sí a tu dirección"},{"type":"VERSO","text":"Digo sí al oír tu voz /\nSí Señor"},{"type":"VERSO","text":"Mi confianza está puesta en ti\nEn cada paso tú estás ahí\nAutor y consumador de mi fe"},{"type":"VERSO","text":"Eres para mí"},{"type":"VERSO","text":"Solo en ti puedo descansar\nNada me robará la paz\nMi mirada está fija en ti"},{"type":"VERSO","text":"No se desviará"},{"type":"VERSO","text":"/ Me rindo a ti, yo digo sí\nMe rindo a ti, yo digo sí\nMe rindo a ti, yo digo sí Señor /"}]},{"title":"Aún en la batalla","key":"C","strophes":[{"type":"VERSO","text":"Tu amor venció\nLa oscuridad\nPeleaste en mi lugar"},{"type":"VERSO","text":"Mis ojos yo\nEn ti pondré\nDejando el miedo atrás"},{"type":"CORO","text":"Aún en la batalla\nAún en la tormenta\nEn medio del caos"},{"type":"CORO","text":"Confiaré\nSé que eres más fuerte\nQue todo lo que enfrente"},{"type":"CORO","text":"Siempre te alabo\nCon todo mi ser\nCon lo que yo soy, Dios"},{"type":"VERSO","text":"La tempestad\nSe rinde a ti\nMi alma en calma está"},{"type":"VERSO","text":"Tu mano allí\nMe esperará\nEn fe ando sobre el mar"},{"type":"VERSO","text":"//Firme estará mi corazón\nNada podrá apagar mi voz\nMi esperanza viva está en ti"},{"type":"VERSO","text":"El fuego contigo cruzaré\nY sé que no me quemaré\nTodo lo que yo soy lo entrego a ti//"}]},{"title":"Por siempre cantaré","key":"C","strophes":[{"type":"VERSO","text":"Traigo mi alabanza\nEs más que palabras\nEsto no es una actuación"},{"type":"VERSO","text":"No es por emociones\nPor lo que yo canto\nSolo tú eres la razón"},{"type":"CORO","text":"Por siempre cantaré\nY con todo gritaré\nSolo a ti, Jesús, mi rey"},{"type":"CORO","text":"No puedo imaginar\nCantar solo por cantar\nLo que quiero es adorar"},{"type":"VERSO","text":"Mi atención entera\nEs lo que deseas\nTú no buscas perfección"},{"type":"VERSO","text":"Una canción no es suficiente\nToda mi vida es lo que quieres\nQuiero adorarte para siempre"},{"type":"VERSO","text":"Mi alabanza tú mereces"}]},{"title":"Increíble","key":"C","strophes":[{"type":"VERSO","text":"Poderoso, invencible, admirable\nGrande, fuerte, Dios\nRey de reyes, asombroso, incomparable"},{"type":"CORO","text":"Eres increíble, todo poderoso\nGrande, eres increíble\nVenciste las tinieblas"},{"type":"CORO","text":"Cristo exaltado estás"},{"type":"VERSO","text":"Increíble, invencible, mi Dios\nSolo tú, solo tú\n//Tú eres increíble, invencible"},{"type":"VERSO","text":"Mi Dios solo tú, solo tú//"}]},{"title":"No puedo callar","key":"G","strophes":[{"type":"VERSO","text":"De las cenizas me has levantado, he vuelto a nacer\nTu gracia irrumpió mi corazón, ha vuelto a latir"},{"type":"CORO","text":"//Mi llanto en gozo cambiaste, Jesús\nBorraste el pasado, hoy vivo en la luz"},{"type":"VERSO","text":"Danzamos en tu libertad\nTu vida corre en mi ser\nCantamos por tu gloria oh, Dios, el gozo de tu salvación"},{"type":"VERSO","text":"No puedo callar\nNo puedo callar//"},{"type":"VERSO","text":"Sobre la roca estoy\nMis ojos puestos solo en Jesús\nAnte la tempestad,"},{"type":"VERSO","text":"mi ancla firme esta en ti"}]},{"title":"No volveré atrás","key":"D","strophes":[{"type":"VERSO","text":"Sin ti Señor no puedo yo vivir\nSin ti Señor no puedo existir"},{"type":"VERSO","text":"Sentido diste a mi vida\nPuedo exaltar, puedo alabar"},{"type":"VERSO","text":"Sentido diste a mi vida\nPuedo exaltar, puedo gritar."},{"type":"CORO","text":"/ No volveré atrás\nContigo estaré\nCaminando de tu mano"},{"type":"CORO","text":"Seguro seré /"},{"type":"VERSO","text":"Nada imposible será\nSiento que puedo volar"}]},{"title":"Vida tu me das","key":"G","strophes":[{"type":"VERSO","text":"Me despierto con un motivo\nCaminar junto a ti\nHe decidido vivir"},{"type":"VERSO","text":"Mi vida contigo\nMe levantas con nuevas fuerzas\nY me das libertad"},{"type":"VERSO","text":"Soy joven por siempre en ti\nTú eres mi fuente"},{"type":"CORO","text":"Como el sol brillando en majestad\nEn color transformó la oscuridad\nNuevo soy, encontré mi identidad"},{"type":"CORO","text":"Vida tú me das\nVida tú me das"},{"type":"VERSO","text":"Tú me guías en cada paso\nSuficiente es tu amor\nNo existe mejor decisión"},{"type":"VERSO","text":"Que darte mi vida, Señor"},{"type":"VERSO","text":"Tu amor me lleva mucho más allá\nDe lo que yo puedo imaginar\nA tu libertad yo vuelvo a entrar"},{"type":"VERSO","text":"Eres todo lo que quiero y más"}]},{"title":"El Dios que adoramos","key":"E","strophes":[{"type":"VERSO","text":"El Dios que hizo los cielos y la tierra\nCon el poder de su palabra\nY reina con autoridad"},{"type":"VERSO","text":"El Dios que aún los vientos le obedecen\nUna palabra es suficiente\nPara los muertos levantar"},{"type":"VERSO","text":"Nadie es como él\nOh, gran yo soy"},{"type":"VERSO","text":"Tú eres el Dios que adoramos\nTodopoderoso y soberano\nGrande en misericordia y poder para salvar"},{"type":"VERSO","text":"Tú eres el Dios que adoramos\nQuien derrotó la muerte y el pecado\nGlorioso redentor y rey, te adoramos"},{"type":"VERSO","text":"El Dios que descendió desde su trono\nPara llevar sobre sus hombros\nNuestra culpa y transgresión"},{"type":"VERSO","text":"Jesús, exaltado sobre todo\nNombre sobre todo nombre\nSolo en él hay salvación"},{"type":"VERSO","text":"A él sea la gloria y el poder\nTodo es de él y para él\nA él sea la gloria y el poder"},{"type":"VERSO","text":"Todo es de él y para él"}]},{"title":"Amor como fuego","key":"A","strophes":[{"type":"VERSO","text":"Anhelo un toque de tu amor\nSolo un destello de tu gloria en mi Señor\nEn un momento todo puedes transformar"},{"type":"VERSO","text":"Mi vida has cambiado Dios"},{"type":"VERSO","text":"Y no alcanzo a comprender\nTu amor sostiene por completo hoy mi ser\nTu gracia y sangre que mi vida transformo"},{"type":"VERSO","text":"Borraste mi pasado Dios"},{"type":"VERSO","text":"/Tu amor es como fuego\nQue arde en mi interior\nMi único anhelo"},{"type":"VERSO","text":"Rendirte adoración/"},{"type":"VERSO","text":"Con tu fuego lléname"},{"type":"VERSO","text":"Que tu amor me atraiga\nAl lugar donde tu estás\nQuiero más de ti Señor"},{"type":"VERSO","text":"Me rindo ante ti Jesús\nMe entrego humilde\nAnte el mensaje de la cruz"},{"type":"VERSO","text":"Y me abandono\nEn tu presencia y amor\nJamás seré igual oh Dios"},{"type":"VERSO","text":"/Que tu amor me atraiga\nAl lugar donde tu estás\nQuiero más de ti Señor"},{"type":"VERSO","text":"En la cruz hoy me rindo\nSeguiré tu llamado Dios\nCristo pertenezco a ti//"}]},{"title":"No hay lugar más alto","key":"G","strophes":[{"type":"VERSO","text":"A tus pies arde mi corazón\nA tus pies entrego lo que soy\nEs el lugar de mi seguridad"},{"type":"VERSO","text":"Donde nadie me puede señalar"},{"type":"VERSO","text":"Me perdonaste\nMe acercaste a tu presencia\nMe levantaste"},{"type":"VERSO","text":"Hoy me postro, adorarte"},{"type":"VERSO","text":"No hay lugar más alto\nMás grande\nQue estar a tus pies"},{"type":"VERSO","text":"Que estar a tus pies"},{"type":"VERSO","text":"/ Y aquí permaneceré\nPostrado a tus pies\nY aquí permaneceré"},{"type":"VERSO","text":"A los pies de Cristo /"},{"type":"VERSO","text":"/ No hay lugar más alto\nMás grande\nQue estar a tus pies"},{"type":"VERSO","text":"Que estar a tus pies /"}]},{"title":"El es la voz","key":"D","strophes":[{"type":"VERSO","text":"Él es la voz que mis oídos abrió\nla libertad que mis cadenas rompió\nÉl es la luz que mi alma oscura iluminó"},{"type":"VERSO","text":"Él es Jesús toda mi vida transformó\nÉl hizo cambiar mi odio en amor\nconvierte en alegría mi dolor"},{"type":"VERSO","text":"puede transformar al más pecador\ndarle una nueva vida y su perdón\nÉl hizo que vuelva a latir"},{"type":"VERSO","text":"mi corazón."}]},{"title":"Amor sin condición","key":"C","strophes":[{"type":"VERSO","text":"Aún antes de hablar, tu voz podía oír\nHas sido tan bueno para mí\nAntes de respirar, soplaste tu aliento en mí"},{"type":"VERSO","text":"Has sido tan bueno para mí"},{"type":"CORO","text":"Tu amor me envuelve, me sostiene\nAmor sin condición\nMe persigue y deja las noventa y nueve"},{"type":"CORO","text":"Y va por mí\nNo puedo ganarlo, ni merecerlo\nTu amor se entregó por mí"},{"type":"CORO","text":"Tu amor me envuelve, me sostiene\nAmor sin condición"},{"type":"VERSO","text":"Cuando enemigo fui\nTu amor luchó por mí\nHas sido tan bueno para mí"},{"type":"VERSO","text":"Cuando indigno fui\nPagaste el precio por mí\nHas sido tan bueno para mí"},{"type":"VERSO","text":"//No hay sombra que no alumbres\nMonte que no escales\nPara encontrarme a mí"},{"type":"VERSO","text":"No hay pared que no derrumbes\nCadena que no rompas\nPara encontrarme a mí//"}]},{"title":"Por encima del sol","key":"D","strophes":[{"type":"VERSO","text":"Por encima del sol\nHay una vista real\nDe allí la vida se puede ver"},{"type":"VERSO","text":"Como es en verdad\nUna visión celestial\nDe todo lo terrenal"},{"type":"VERSO","text":"Toda la historia se ve a la luz\nDe la eternidad"},{"type":"CORO","text":"Quiero fijar mis ojos mucho más allá de lo que puedo ver\nMiles de páginas me sirven de ventana para andar por fe\nMi Dios está su trono y lo gobierna todo"},{"type":"CORO","text":"Puedo yo confiar pues soberano es él\nPueden subir las aguas, firme está mi alma cuando puedo ver"},{"type":"VERSO","text":"Por encima del sol\nSe puede ver redención\nTodo lo viejo cambiando por"},{"type":"VERSO","text":"Una nueva creación\nLa más profunda aflicción\nLuego se vuelve una nueva canción"},{"type":"VERSO","text":"Cuando yo puedo un destello ver\nDe la gloria de Dios"},{"type":"CORO","text":"/Puedo pasar por el fuego,\nque soplen los vientos\nSe agiten los mares,"},{"type":"CORO","text":"pues no hay sufrimiento\nQue no de buen fruto de vida a su tiempo\nMientras yo espero/"},{"type":"CORO","text":"Mis ojos están por encima del sol."}]},{"title":"El mismo amor","key":"E","strophes":[{"type":"VERSO","text":"Tú al humilde levantarás\nal débil tú fuerzas le das\nnuestra tristeza sanarás"},{"type":"VERSO","text":"vida nos das"},{"type":"CORO","text":"El mismo amor que trae libertad\nel mismo amor que al ciego vista da\nnos llama por nombre hoy"},{"type":"CORO","text":"Tú nos llamas por nombre hoy\nEl mismo Dios que el cielo formó\nel mismo Dios que en la cruz murió"},{"type":"CORO","text":"nos llama por nombre hoy\nTú nos llamas por nombre hoy"},{"type":"VERSO","text":"Al que no cree lo apartas Tú\npara decirle mío eres tú\nal orgulloso llamas y al infeliz"},{"type":"VERSO","text":"vengan a mí"},{"type":"CORO","text":"/Nos llamas\nnos llamas\nnos llamas hacia la cruz/"}]},{"title":"Envíame","key":"","strophes":[{"type":"VERSO","text":"Él nos salvó, nos separó\nPara anunciar de las virtudes de Aquel"},{"type":"VERSO","text":"Que nos llamó\nDe las tinieblas a la luz\nPara la gloria de su gracia engrandecer"},{"type":"VERSO","text":"Heme aquí, envíame"},{"type":"CORO","text":"Abre los ojos, oh Señor\nTrae libertad y salvación\nQue tu evangelio las naciones puedan conocer"},{"type":"VERSO","text":"Que tu amor dado en la cruz\nAtraiga al mundo a Tu luz\nY toda lengua te confiese como el Señor"},{"type":"VERSO","text":"Danos valor para predicar\nDe tu Palabra siempre con fidelidad\nIr sin temor"},{"type":"VERSO","text":"Pues con nosotros estarás\nY los confines de la tierra alcanzar\nHeme aquí, envíame"}]},{"title":"El Cordero y el León","key":"","strophes":[{"type":"VERSO","text":"Él viene con poder\nTodo reino lo verá\nCadenas romperá"},{"type":"VERSO","text":"Y todos le adorarán\nQuién como el Señor Dios fuerte"},{"type":"CORO","text":"Él es el León, León de Judá\nÉl tiene poder para liberar\nTodos se postrarán ante tí"},{"type":"CORO","text":"Él es el Cordero, Cordero inmolado\nSu sangre en la cruz borró mi pecado\nTodos se postrarán ante el Cordero y el León"},{"type":"CORO","text":"Todos se postrarán ante ti"},{"type":"VERSO","text":"Abrid las puertas hoy\nAl Rey de reyes y Señor\nEl Dios de Salvación"},{"type":"VERSO","text":"Vino a darnos libertad\nQuién como el Señor Dios fuerte"}]},{"title":"Mi Corazón quiere agradarte","key":"E","strophes":[{"type":"VERSO","text":"No volveré atrás\nMi vida quiero dar sólo para el Señor\nAquel que me salvó"},{"type":"VERSO","text":"No quiero despreciar mi tiempo en vanidad\nNo quiero, no quiero\nVolver atrás no quiero"},{"type":"VERSO","text":"Mi tiempo invertiré en cosas\nQue traerán gloria en la eternidad\nCoronas al Señor, no voy a despreciar su gracia y su amor"},{"type":"VERSO","text":"No quiero, no quiero\nVolver atrás no quiero"},{"type":"CORO","text":"Mi corazón quiere agradarte mi Dios\nQuiere obedecerte para brillar más, mas en este mundo\nMi corazón quiere estar cerca tuyo"},{"type":"CORO","text":"Quiere glorificarte para brillar más y agradarte en todo Dios"},{"type":"VERSO","text":"No quiero más estar yo fuera de tu plan\nPorque mi corazón al fin se secara\nYa no quiero dejar de lado la oración"},{"type":"VERSO","text":"No quiero, no quiero,\nVolver atrás no quiero"},{"type":"VERSO","text":"A tu palabra yo nunca abandonare\nSe que así podre fortalecer mi fe\nNo voy a avergonzar el nombre de Jesús"},{"type":"VERSO","text":"No quiero, no quiero\nVolver atrás no quiero"},{"type":"VERSO","text":"Mi vida por completo te quiero dar\nMi tiempo, mis talentos utilizar\nMi corazón completo para brillar más en este mundo ×2"}]},{"title":"Te doy Gloria","key":"A","strophes":[{"type":"VERSO","text":"// Cuan Hermoso Eres JESUS\nSon Tus Palabras, Es Tu Amor\nCuan Glorioso Eres JESUS"},{"type":"VERSO","text":"Es Tu Poder, Fue Tu Cruz"},{"type":"VERSO","text":"La Que Me Salvo Me Rescato\nUn Momento Ahí\nNos Dio Libertad."},{"type":"VERSO","text":"Te Doy Gloria Gloria\nTe Doy Gloria Gloria\nTe Doy Gloria Gloria"},{"type":"VERSO","text":"A Ti JESUS //"},{"type":"VERSO","text":"// Con Una corona\nDe Espinos\nTe Hiciste"},{"type":"VERSO","text":"Rey Por Siempre\nCon Una corona\nDe Espinos"},{"type":"VERSO","text":"Te Hiciste\nRey Por Siempre //"}]},{"title":"Diez mil Razones","key":"","strophes":[{"type":"CORO","text":"Que todo lo que soy, alabe al señor\nCon todo mi corazón\nDe tu grande amor, cantaré"},{"type":"CORO","text":"Tu nombre alabaré"},{"type":"VERSO","text":"Y en ese día cuando ya no tenga fuerza\nY se acerque tu gloria\nMi alma cantará de tu amor sin final"},{"type":"VERSO","text":"Diez mil años y para siempre más"},{"type":"VERSO","text":"Tu amor no tiene fin\nY tú eres para siempre\nY bondadoso es tu corazón"},{"type":"VERSO","text":"Por todo lo que has hecho yo sigo cantando\nDiez mil razones para alabar"},{"type":"VERSO","text":"Sale el Sol, es un nuevo amanecer\nCantaré a ti otra vez\nSea lo que venga, confiaré en ti"},{"type":"VERSO","text":"Alabaré en el anochecer"}]},{"title":"Hay otra salida","key":"D","strophes":[{"type":"VERSO","text":"Atrapado en el celular necesito escapar\nAsí es la vida hoy\nQuiero dejar de aparentar y mis filtros quitar"},{"type":"VERSO","text":"Por otro camino voy"},{"type":"VERSO","text":"No quiero más seguir la corriente\nUna tendencia no es suficiente\nLo que dice la sociedad no define quién soy"},{"type":"VERSO","text":"Un mejor camino hay"},{"type":"CORO","text":"Todos nosotros\nEstamos cansados\nDe aparentar (na-na, na-na, na)"},{"type":"CORO","text":"No más mentiras\nHay otra salida\nEres la verdad"},{"type":"CORO","text":"Na-na, na-na, na x4"},{"type":"VERSO","text":"Un estereotipo no es lo que yo quiero ser\nNo soy una copia más\nUna moda ya es lo de ayer cómo llega se fue"},{"type":"VERSO","text":"Un mejor camino hay"},{"type":"VERSO","text":"No quiero más seguir la corriente\nUna tendencia no es suficiente\nLo que dice la sociedad no define quién soy"},{"type":"VERSO","text":"Un mejor camino hay"}]},{"title":"Más allá de tu ventana","key":"","strophes":[{"type":"VERSO","text":"Suena en mí una melodía\nQue da vida al corazón\nSe levanta como un himno"},{"type":"VERSO","text":"Que arde en mi interior"},{"type":"VERSO","text":"Todas las generaciones\nLevantando una voz\nCada hijo y cada hija"},{"type":"VERSO","text":"Cantarán esta canción"},{"type":"VERSO","text":"No te quedes callado\nYa no te escondas más\nMás allá de tu ventana"},{"type":"VERSO","text":"Hay un mundo que alcanzar\nAlza al cielo tus manos"},{"type":"VERSO","text":"Alza al cielo tu voz\nPor los siglos cantaremos\nAl Señor de la creación"},{"type":"VERSO","text":"Canta oh oh oh oh oh oh"},{"type":"VERSO","text":"Del famoso al ignorado\nDel palacio al callejón\nSe escucha este latido"},{"type":"VERSO","text":"Que atrae mi corazón"},{"type":"VERSO","text":"Oigo el mundo despertarse\nUn sonido celestial\nCada tribu y cada lengua"},{"type":"VERSO","text":"Canta Cristo es la verdad"},{"type":"VERSO","text":"Puedo el mundo ver volver a brillar\nAl oír su voz las murallas caerán\nEl pecado no me puede atar"},{"type":"VERSO","text":"Nuestro Dios Él vivo está\nEl perdido vuelve de la oscuridad\nEl cautivo libre por siempre será"},{"type":"VERSO","text":"Ningún ojo ha visto lo que Dios hará\nLa creación Despertará"}]},{"title":"Cambiará mi tristeza","key":"","strophes":[{"type":"VERSO","text":"Cambiaré mi tristeza, cambiaré mi vergüenza\nLos entregare por el gozo de Dios\nCambiare mi dolor y mi enfermedad"},{"type":"VERSO","text":"Los entregare por el gozo de Dios"},{"type":"VERSO","text":"Si Señor, si si Señor\nSi Señor, si si Señor\nSi Señor, si si Señor"},{"type":"VERSO","text":"Amén"},{"type":"VERSO","text":"Estando atribulado pero nunca derrotado\nY perseguido este hoy\nMaldiciones no me afectan"},{"type":"VERSO","text":"Pues yo se a quien voy\nEn su gozo fuerte soy\nAunque triste en la noche yo este"},{"type":"VERSO","text":"Gozo viene en la mañana"},{"type":"VERSO","text":"/Coro/"}]},{"title":"La victoria","key":"","strophes":[{"type":"VERSO","text":"La victoria ya llegó\nYa no hay muerte el me rescató\nSalvo soy pues resucitó (uh-uh-uh)"},{"type":"VERSO","text":"Hoy la cruz vacía está\nY la vida eterna tengo ya\nCelebrad Cristo vivo está"},{"type":"VERSO","text":"Vivo está"},{"type":"VERSO","text":"OH CANTARE, GRITARÉ\nMI ALMA LIMPIA ESTA\nOH CANTARE, GRITARÉ"},{"type":"VERSO","text":"CAMBIO MI ETERNIDAD\nJAMAS SERÉ IGUAL"},{"type":"CORO","text":"//OH QUE GLORIOSO LUGAR\nQUE GLORIOSO FINAL\nPUES ME HA SAL-VA-DO//"},{"type":"VERSO","text":"Estaré en aquel lugar\nLibre al fin por la eternidad\nTuyo soy, tu eres mi Dios"},{"type":"VERSO","text":"Hoy la cruz vacía está\nY la vida eterna tengo ya\nCelebrad Cristo vivo está"},{"type":"VERSO","text":"vivo está"}]},{"title":"La Salvación es del Señor","key":"","strophes":[{"type":"VERSO","text":"Aunque el mal se levante contra mí\nNo temeré, no temeré\nY aunque vea mi carne perecer"},{"type":"VERSO","text":"No temeré, no temeré\nSi al sufrir se conmueve mi fe\nNo temeré, no temeré"},{"type":"VERSO","text":"Y diré al Señor\nRefugio mío, mi fortaleza\nTu nombre bendeciré"},{"type":"VERSO","text":"En todo tiempo\nEn Ti confiaré"},{"type":"VERSO","text":"Escudo alrededor de mí\nNo temerá mi corazón\nLa salvación es del Señor"},{"type":"VERSO","text":"Mi vida escondida está\nEn Cristo por la eternidad\nLa salvación es del Señor"},{"type":"VERSO","text":"Todo el peso de tu ira recayó\nSobre Jesús y no temeré\nPerfecto amor que ha cubierto mi maldad"},{"type":"VERSO","text":"Y echó fuera mi temor y no temeré"},{"type":"VERSO","text":"//Mi alma espera en el Señor\nÉl es mi roca y mi canción\nMe aferro a Sus promesas"},{"type":"VERSO","text":"Que en Cristo ciertas son\nLa salvación es del Señor//"},{"type":"VERSO","text":"Y diré al Señor\nRefugio mío, mi fortaleza\nTu nombre bendeciré"},{"type":"VERSO","text":"En todo tiempo\nEn Ti confiaré"}]},{"title":"Dios Poderoso","key":"","strophes":[{"type":"VERSO","text":"Quién, sino el Señor\nLas estrellas creó y su luz limitó\nQuién, si no el Señor"},{"type":"VERSO","text":"Sol y luna formó, movimiento les dio\nQuién, sino el Señor\nHace la lluvia venir, truenos rugir"},{"type":"VERSO","text":"Tus obras grandes son"},{"type":"VERSO","text":"Dios poderoso\nTu gobiernas la creación\nCon tu palabra Señor"},{"type":"VERSO","text":"Te exaltaremos\nDios poderoso\nDe ti canta la creación"},{"type":"VERSO","text":"Llenas todo tu Señor\nTe exaltaremos\nPor siempre y siempre, oh Dios"},{"type":"VERSO","text":"Quién, sino el Señor\nHa soñado en el plan, para al hombre salvar\nQuien, sino el Señor"},{"type":"VERSO","text":"Limpiará al pecador con su sangre y amor\nQuién, sino el Señor\nPuede dar vida y salvar por una cruz"},{"type":"VERSO","text":"Tus planes grandes son"},{"type":"VERSO","text":"Todas las cosas\nVienen de ti y por ti\nOh, Gran Yo Soy"},{"type":"VERSO","text":"Todo es tuyo\nY para ti, oh Señor\nOh, Gran Yo Soy"},{"type":"VERSO","text":"Te exaltaremos\nPor siempre y siempre, oh Dios\nPor siempre y siempre, oh Dios"}]},{"title":"En esto conocemos","key":"","strophes":[{"type":"VERSO","text":"Grande amor\nNo existe nada bajo el sol\nQue se compare a ti, Señor"},{"type":"VERSO","text":"¿Quién te puede comprender?"},{"type":"VERSO","text":"Amor que bajó desde el cielo\nMi alma, él vino a salvar"},{"type":"CORO","text":"En esto conocemos el amor\nQue él dio su vida por nosotros, por nosotros\nSublime gracia que nos alcanzó"},{"type":"CORO","text":"Él dio su vida por nosotros, por nosotros\nOh-oh, uh-uh-uh-uh-uh\nOh-oh, uh-uh-uh-uh-uh"},{"type":"VERSO","text":"Fiel amor\nNo deja ir mi corazón\nY mis pecados ya olvidó"},{"type":"VERSO","text":"¿Quién me puede separar?\nFuerte amor\nComo montes a mi alrededor"},{"type":"VERSO","text":"Rodeándome, seguro estoy\n¿Quién me puede conmover?"},{"type":"VERSO","text":"Mi nombre cargó hasta el madero\nY me amó, hasta el final"},{"type":"VERSO","text":"De tal manera amó Dios al mundo\nQue envió a su hijo a morir en una cruz\nY a todo aquel que crea en su nombre"},{"type":"VERSO","text":"La vida eterna le dará, no morirá"}]},{"title":"Eres Rey de los cielos","key":"","strophes":[{"type":"VERSO","text":"Glorioso Salvador\nDivino Redentor\nMe postraré ante Ti"},{"type":"VERSO","text":"Bendito hijo de Dios\nHermoso rey de Sion\nTe adoraré y así declararé"},{"type":"CORO","text":"Eres rey de los cielos, eterno Dios\nExaltado por siempre, Jesús, Señor"},{"type":"VERSO","text":"Tú gobiernas en toda la creación\nOh, Cordero inmolado, eres Señor"},{"type":"CORO","text":"Eres Rey de los cielos, eterno Dios\nExaltado por siempre, Jesús, Señor\nTú gobiernas en toda la creación"},{"type":"VERSO","text":"Oh, cordero inmolado, eres Señor\nLas naciones enteras se postrarán\nY tu nombre por siempre bendecirán"},{"type":"VERSO","text":"Por los siglos tu gloria nos llenará\nY veremos tu fuerza y majestad"}]},{"title":"Alaba","key":"","strophes":[{"type":"VERSO","text":"// Que toda la creación\nAlabe a Dios //"},{"type":"VERSO","text":"Te alabo en el valle\nTe alabo en el monte\nTe alabo en el día"},{"type":"VERSO","text":"Te alabo en la noche\nTe alabo en el medio\nEstando rodeado"},{"type":"VERSO","text":"Porque cuanto alabo\nTu estás a mi lado"},{"type":"PUENTE","text":"Mientras tenga aliento\nMi alma canta y"},{"type":"CORO","text":"Alaba a Dios mi corazón\nAlaba a Dios mi corazón"},{"type":"VERSO","text":"Te alabo al sentirlo\nY aún cuando no\nTe alabo y se"},{"type":"VERSO","text":"Que estás en control\nEs más que un sonido\nEs adoración"},{"type":"VERSO","text":"Y cuando alabamos\nCaerá Jericó"},{"type":"VERSO","text":"No me detengo\nMi Dios vivo está\nComo me voy a callar"},{"type":"VERSO","text":"Alaba a Dios\nMi corazón"},{"type":"VERSO","text":"Alabo al que reina\nAlabo al Señor\nAlabo a aquel"},{"type":"VERSO","text":"Que en la tumba venció\nAlabo al que es bueno\nAlabo al que es fiel"},{"type":"VERSO","text":"Alabo porque no hay otro como Él"}]},{"title":"La Bondad de Dios","key":"","strophes":[{"type":"VERSO","text":"Te amo Dios\nTu amor nunca me falla\nMi existir"},{"type":"VERSO","text":"En tus manos está\nDesde el momento en que despierto\nHasta el anochecer"},{"type":"VERSO","text":"Yo cantaré de la bondad de Dios"},{"type":"CORO","text":"En mi vida he sido bueno\nEn mi vida he sido tan, tan fiel\nCon mi ser con cada aliento"},{"type":"CORO","text":"Yo cantaré de la bondad de Dios"},{"type":"VERSO","text":"Yo amo tu voz\nMe has guiado por fuego\nTú cerca estás"},{"type":"VERSO","text":"En la oscuridad\nTe conozco como Padre\nY como amigo fiel"},{"type":"VERSO","text":"Mi vida está\nEn la bondad de Dios"},{"type":"VERSO","text":"Tu fidelidad sigue persiguiéndome\nTu fidelidad sigue persiguiéndome\nTodo lo que soy te lo entrego hoy"},{"type":"VERSO","text":"Aquí me rendiré"}]},{"title":"Nada es imposible","key":"","strophes":[{"type":"VERSO","text":"(Por ti todo los puedo\nTodo es posible\nY la fuerza tú me das"},{"type":"VERSO","text":"Nada es imposible"},{"type":"VERSO","text":"Por ti los ojos se abren\nCadenas son rotas\nY yo viviré por fe"},{"type":"VERSO","text":"Nada es imposible"},{"type":"VERSO","text":"No viviré por lo que veo\nNo viviré por lo que siento\nYo sé que aquí conmigo estás"},{"type":"VERSO","text":"Yo sé que tu eres grande Dios) x2"},{"type":"VERSO","text":"Por ti todo los puedo\nTodo es posible\nY la fuerza tú me das"},{"type":"VERSO","text":"Nada es imposible"},{"type":"VERSO","text":"Por ti los ojos se abren\nCadenas son rotas\nY yo viviré por fe"},{"type":"VERSO","text":"Nada es imposible"},{"type":"VERSO","text":"(Creo en ti, creo en ti\nCreo en ti, creo en ti Cristo\nCreo en ti, creo en ti"},{"type":"VERSO","text":"Creo en ti, creo en ti, Cristo) x2"}]},{"title":"Digno es el Cordero","key":"","strophes":[{"type":"VERSO","text":"Digno es el Cordero Santo\nSanto, Santo es Él\nLevantamos nuestra alabanza"},{"type":"VERSO","text":"Al que en el trono está"},{"type":"VERSO","text":"Santo, santo, santo Dios Todopoderoso\nQuien fue, quien es y quien vendrá"},{"type":"VERSO","text":"//La creación hoy canta y damos gloria a Él\nTú eres digno por siempre y siempre//"}]},{"title":"Vamos a cantar","key":"","strophes":[{"type":"VERSO","text":"Vamos a cantar\nCon la música del cielo vamos a cantar\nAlegres porque escuchas cuando"},{"type":"VERSO","text":"Cantamos para exaltar tu nombre"},{"type":"VERSO","text":"Vamos a cantar\nCon la música del cielo vamos a cantar\nAlegres porque escuchas cuando"},{"type":"VERSO","text":"Cantamos para exaltar tu nombre"},{"type":"VERSO","text":"Vamos (a cantar)\n(Con la música del cielo) vamos a cantar\nAlegres porque escuchas cuando"},{"type":"VERSO","text":"Cantamos para exaltar tu nombre"},{"type":"VERSO","text":"Vamos a cantar\nCon la música del cielo\nVamos a cantar"},{"type":"VERSO","text":"Alegres porque escuchas\nCuando cantamos\nPara exaltar tu nombre"},{"type":"VERSO","text":"Amamos todo de Ti\nCielo y tierra Te adoran\nLos reinos se rinden"},{"type":"VERSO","text":"Hijo de Dios, tú eres por quien\nTú eres por quien\nVivimos hoy"},{"type":"VERSO","text":"Eres quien nos liberta\nEres la luz que guía\nComo un fuego ardiente"},{"type":"VERSO","text":"Hijo de Dios, tú eres por quien\nTú eres por quien\nVivimos hoy"}]},{"title":"Yo soy segundo","key":"","strophes":[{"type":"VERSO","text":"La culpa es mía, no lo puedo\nnegar, de mi pasado\nquiero escapar"},{"type":"VERSO","text":"¿Quién me salvará ///"},{"type":"VERSO","text":"Viniste tu para darme perdón,\nno te deje entrar en mi\nCorazón."},{"type":"VERSO","text":"Tú me salvarás ///"},{"type":"VERSO","text":"Abriste mis ojos y te veo\ny ahora yo sé que..."},{"type":"VERSO","text":"Tú por siempre me amaste\nprimero te entrego mi corazón\nentero."},{"type":"VERSO","text":"Veo tu amor tan profundo,\nYo quiero más de ti,\nYo soy segundo"},{"type":"VERSO","text":"Soy segundo..."},{"type":"VERSO","text":"Te seguiré al fin del mundo\nTe pongo a ti en mi vida primero\nTú me salvas"},{"type":"VERSO","text":"Tú me salvas\nTú me salvas\nAbriste mis ojos y te veo"},{"type":"VERSO","text":"Y ahora yo sé que.."},{"type":"VERSO","text":"Tú por siempre me amaste primero\nTe entrego mi corazón entero\nVeo tu amor tan profundo,"},{"type":"VERSO","text":"Yo quiero más de ti,\nYo soy segundo\nSoy segundo..."},{"type":"VERSO","text":"Que tu nombre sea famoso,\nTe exaltaré, eres primero\nDeclararé tu nombre al mundo"},{"type":"VERSO","text":"En mi vida serás número uno\nTú por siempre me amaste primero\nTe entrego mi corazón entero"},{"type":"VERSO","text":"Veo tu amor tan profundo\nYo quiero más de ti\nYo soy segundo"},{"type":"VERSO","text":"Soy segundo\nSoy segundo\nSoy segundo"},{"type":"VERSO","text":"Quién me salvará?\nQuién me salvará?\nQuién me salvará?"},{"type":"VERSO","text":"Tú me salvarás!\nTú me salvarás!\nTú me salvarás!"}]}]/* SONGS_END */;
+
+/* STATE */
+let allSongs=[],activeSong=null,activeIdx=0,editingIdx=-1,pendingDeleteIdx=-1;
+let currentTypes=[],sortAlpha=false;
+let setlist=[],setlistMode=false,setlistPos=0;
+
+/* STORAGE */
+function loadSongs(){try{const s=localStorage.getItem('cancionero_all');if(s)return JSON.parse(s)}catch{}return null}
+function persistSongs(){
+  if(window.electronAPI)window.electronAPI.saveSongs(JSON.stringify(allSongs));
+  else localStorage.setItem('cancionero_all',JSON.stringify(allSongs))
+}
+function initSongs(){allSongs=loadSongs()||JSON.parse(JSON.stringify(INITIAL_SONGS))}
+
+/* HOME */
+function renderList(songs){
+  const el=document.getElementById('songList');
+  if(!songs.length){el.innerHTML='<div class="no-results">No se encontraron canciones</div>';return}
+  el.innerHTML='<div class="list-header">'+songs.length+' cancion'+(songs.length!==1?'es':'')+'</div>'+
+    songs.map((s,i)=>{
+      const ri=allSongs.indexOf(s);
+      const inSl=setlist.includes(ri);
+      return'<div class="song-item" onclick="openSong('+ri+')">'+
+        '<span class="si-num">'+(i+1)+'</span>'+
+        '<div class="si-info"><div class="si-name">'+esc(s.title)+'</div><div class="si-meta">'+s.strophes.length+' diapositiva'+(s.strophes.length!==1?'s':'')+'</div></div>'+
+        (s.key?'<span class="si-key">'+esc(s.key)+'</span>':'')+
+        '<div class="si-actions">'+
+          '<button class="si-sl-btn'+(inSl?' in-sl':'')+'" onclick="event.stopPropagation();toggleSetlistSong('+ri+')" title="'+(inSl?'Quitar del culto':'Agregar al culto')+'">'+(inSl?'&#10003;':'&#43;')+'</button>'+
+          '<button class="si-action-btn" onclick="event.stopPropagation();openEditor('+ri+')" title="Editar">&#9998;</button>'+
+        '</div><span class="si-arrow">&#8250;</span></div>'
+    }).join('')}
+
+function toggleSort(){
+  sortAlpha=!sortAlpha;
+  const btn=document.getElementById('sortBtn');
+  btn.textContent=sortAlpha?'A‑Z ✓':'A‑Z';
+  btn.style.color=sortAlpha?'var(--accent)':'';
+  btn.style.borderColor=sortAlpha?'var(--accent)':'';
+  filterSongs(document.getElementById('searchInput').value);
+}
+function filterSongs(q){
+  const t=q.toLowerCase().trim();
+  let list=allSongs.filter(s=>s.title.toLowerCase().includes(t));
+  if(sortAlpha)list=[...list].sort((a,b)=>a.title.localeCompare(b.title,'es'));
+  renderList(list);
+}
+
+/* PRESENTATION */
+let presScale=1,presColor='#fff';
+function openSong(idx){
+  activeSong=allSongs[idx];activeIdx=0;
+  document.getElementById('presSongTitle').textContent=activeSong.title+(activeSong.key?' — '+activeSong.key:'');
+  document.getElementById('presDots').innerHTML=activeSong.strophes.map((_,i)=>'<div class="dot'+(i===0?' active':'')+'" onclick="goTo('+i+')"></div>').join('');
+  renderSlide(false);showScreen('presentation');
+  if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{})
+}
+function renderSlide(animate){
+  const lyr=document.getElementById('presLyrics');
+  const tag=document.getElementById('stropheTag');
+  const apply=()=>{
+    const s=activeSong.strophes[activeIdx];
+    if(s.type){tag.textContent=s.type;tag.className='strophe-tag '+s.type}
+    else{tag.textContent='';tag.className='strophe-tag none'}
+    lyr.textContent=cleanLyrics(s.text||'');
+    lyr.style.fontSize=(12*presScale)+'vw';
+    lyr.style.color=presColor;
+    lyr.style.opacity='1';
+    tag.style.opacity='1';
+    const total=activeSong.strophes.length;
+    document.getElementById('presCounter').textContent=(activeIdx+1)+' / '+total;
+    document.getElementById('presIndicator').textContent=activeSong.title+(activeSong.key?' · '+activeSong.key:'')+'  '+(activeIdx+1)+'/'+total;
+    if(setlistMode){
+      document.getElementById('slPos').textContent='CULTO '+(setlistPos+1)+' / '+setlist.length;
+      document.getElementById('songPrevBtn').disabled=setlistPos===0;
+      document.getElementById('songNextBtn').disabled=setlistPos===setlist.length-1;
+    }
+    document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===activeIdx));
+    document.getElementById('prevBtn').disabled=activeIdx===0;
+    document.getElementById('nextBtn').disabled=activeIdx===total-1;
+    requestAnimationFrame(fitText);
+  };
+  if(animate){
+    lyr.style.transition='opacity .13s ease';
+    tag.style.transition='opacity .13s ease';
+    lyr.style.opacity='0';
+    tag.style.opacity='0';
+    setTimeout(apply,140);
+  }else{
+    lyr.style.transition='none';
+    tag.style.transition='none';
+    apply();
+  }
+}
+function cleanLyrics(text){
+  return text.split('\n')
+    .map(l=>l.replace(/^[/\\]+\s*/,'').replace(/\s*[/\\]+$/,'').trim())
+    .filter(l=>l.length>0&&!/^(coro|verso|puente|bridge)\s*\d*$/i.test(l))
+    .join('\n');
+}
+function fitText(){
+  const stage=document.querySelector('.pres-stage');
+  const lyr=document.getElementById('presLyrics');
+  if(!stage||!lyr||!activeSong)return;
+  const maxH=stage.clientHeight-8;
+  const maxW=stage.clientWidth-8;
+  let lo=1,hi=25*presScale;
+  for(let i=0;i<20;i++){
+    const mid=(lo+hi)/2;
+    lyr.style.fontSize=mid+'vw';
+    if(lyr.scrollHeight<=maxH&&lyr.scrollWidth<=maxW)lo=mid;
+    else hi=mid;
+  }
+  lyr.style.fontSize=lo+'vw';
+}
+function navigate(dir){const n=activeIdx+dir;if(n<0||n>=activeSong.strophes.length)return;activeIdx=n;renderSlide(true)}
+function togglePanel(panelId,trigId){
+  const panel=document.getElementById(panelId);
+  const trig=document.getElementById(trigId);
+  const isOpen=panel.classList.contains('open');
+  document.querySelectorAll('.pres-panel').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.pres-trig-btn').forEach(b=>b.classList.remove('open'));
+  if(!isOpen){panel.classList.add('open');trig.classList.add('open')}
+}
+
+function setPresColor(c,id){presColor=c;document.getElementById('presLyrics').style.color=c;['cdot-fff','cdot-ffe','cdot-6de'].forEach(x=>document.getElementById(x).classList.remove('active'));document.getElementById(id).classList.add('active')}
+function setPresBg(c,id){document.getElementById('presentation').style.background=c;['bdot-000','bdot-nav','bdot-pur'].forEach(x=>document.getElementById(x).style.borderColor='transparent');document.getElementById(id).style.borderColor='rgba(255,255,255,.8)'}
+function setPresFont(f,id){document.getElementById('presLyrics').style.fontFamily="'"+f+"',serif";['fbtn-mon','fbtn-lor','fbtn-ral'].forEach(x=>{document.getElementById(x).style.background='rgba(255,255,255,.1)';document.getElementById(x).style.borderColor='rgba(255,255,255,.18)'});const b=document.getElementById(id);b.style.background='rgba(255,255,255,.3)';b.style.borderColor='#fff'}
+function goTo(i){activeIdx=i;renderSlide(true)}
+
+/* EDITOR */
+function splitText(raw){return raw.trim().split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean)}
+
+function updatePreview(){
+  const blocks=splitText(document.getElementById('newLyrics').value);
+  while(currentTypes.length<blocks.length)currentTypes.push('');
+  currentTypes=currentTypes.slice(0,blocks.length);
+  renderPreviewBlocks(blocks)
+}
+
+function renderPreviewBlocks(blocks){
+  const box=document.getElementById('previewBox');
+  if(!blocks.length){
+    box.innerHTML='<div style="color:var(--text-dim);font-size:.8rem;padding:1rem 0;text-align:center;opacity:.5">Las partes aparecen aca cuando escribis la letra</div>';return
+  }
+  const total=blocks.length;
+  box.innerHTML=blocks.map((text,i)=>{
+    const t=currentTypes[i]||'';
+    const pills=['VERSO','CORO','PUENTE'].map(p=>
+      '<button class="type-pill'+(t===p?' sel-'+p:'')+'" onclick="setType('+i+',\''+p+'\')" title="'+(t===p?'Quitar etiqueta':'Marcar como '+p)+'">'+p+'</button>'
+    ).join('');
+    const lineCount=text.split('\n').length;
+    const over=lineCount>3;
+    const counter='<span class="line-counter'+(over?' warn':'')+'">'+lineCount+'/3 líneas'+(over?' ⚠':'')+'</span>';
+    const upBtn='<button class="move-btn" onclick="moveBlock('+i+',-1)"'+(i===0?' disabled':'')+' title="Mover arriba">&#8593;</button>';
+    const dnBtn='<button class="move-btn" onclick="moveBlock('+i+',1)"'+(i===total-1?' disabled':'')+' title="Mover abajo">&#8595;</button>';
+    const cpBtn='<button class="move-btn copy-btn" onclick="duplicateBlock('+i+')" title="Repetir esta parte abajo">&#8635;</button>';
+    const delBtn='<button class="move-btn del-btn" onclick="deleteBlock('+i+')" title="Eliminar esta parte">&#10005;</button>';
+    return'<div class="prev-block'+(over?' over-limit':'')+'">'+
+      '<div class="block-header"><div class="type-pills">'+pills+counter+'</div><div class="move-btns">'+cpBtn+upBtn+dnBtn+delBtn+'</div></div>'+
+      '<div class="prev-text">'+esc(text)+'</div></div>'
+  }).join('')
+}
+
+function setType(idx,type){
+  currentTypes[idx]=(currentTypes[idx]===type)?'':type;
+  renderPreviewBlocks(splitText(document.getElementById('newLyrics').value))
+}
+
+function moveBlock(idx,dir){
+  const blocks=splitText(document.getElementById('newLyrics').value);
+  const ni=idx+dir;
+  if(ni<0||ni>=blocks.length)return;
+  [blocks[idx],blocks[ni]]=[blocks[ni],blocks[idx]];
+  [currentTypes[idx],currentTypes[ni]]=[currentTypes[ni],currentTypes[idx]];
+  document.getElementById('newLyrics').value=blocks.join('\n\n');
+  renderPreviewBlocks(blocks)
+}
+
+function duplicateBlock(idx){
+  const blocks=splitText(document.getElementById('newLyrics').value);
+  blocks.splice(idx+1,0,blocks[idx]);
+  currentTypes.splice(idx+1,0,currentTypes[idx]);
+  document.getElementById('newLyrics').value=blocks.join('\n\n');
+  renderPreviewBlocks(blocks)
+}
+
+function deleteBlock(idx){
+  if(!confirm('¿Eliminar esta sección?'))return;
+  const blocks=splitText(document.getElementById('newLyrics').value);
+  blocks.splice(idx,1);
+  currentTypes.splice(idx,1);
+  document.getElementById('newLyrics').value=blocks.join('\n\n');
+  renderPreviewBlocks(blocks)
+}
+
+function openEditor(idx){
+  editingIdx=idx;currentTypes=[];
+  const isNew=idx===-1;
+  document.getElementById('editorTitle').textContent=isNew?'Agregar cancion':'Editar cancion';
+  if(isNew){
+    document.getElementById('newTitle').value='';
+    document.getElementById('newKey').value='';
+    document.getElementById('newLyrics').value='';
+    document.getElementById('previewBox').innerHTML='<div style="color:var(--text-dim);font-size:.8rem;padding:1rem 0;text-align:center;opacity:.5">Las partes aparecen aca cuando escribis la letra</div>'
+  }else{
+    const song=allSongs[idx];
+    document.getElementById('newTitle').value=song.title;
+    document.getElementById('newKey').value=song.key||'';
+    document.getElementById('newLyrics').value=song.strophes.map(s=>s.text||'').join('\n\n');
+    currentTypes=song.strophes.map(s=>s.type||'');
+    updatePreview()
+  }
+  showScreen('editor')
+}
+
+function saveSong(){
+  const title=document.getElementById('newTitle').value.trim();
+  const key=document.getElementById('newKey').value.trim();
+  const raw=document.getElementById('newLyrics').value.trim();
+  if(!title){showToast('Ingresa el titulo');return}
+  if(!raw){showToast('Ingresa la letra');return}
+  const blocks=splitText(raw);
+  if(!blocks.length){showToast('No se encontraron partes');return}
+  const overLimit=blocks.filter(b=>b.split('\n').length>3);
+  if(overLimit.length){showToast('Hay partes con más de 3 líneas — reducí el texto');return}
+  const strophes=blocks.map((text,i)=>({type:currentTypes[i]||'',text}));
+  const song={title,key,strophes};
+  if(editingIdx===-1){allSongs.push(song);showToast('"'+title+'" agregada')}
+  else{allSongs[editingIdx]=song;showToast('"'+title+'" actualizada')}
+  persistSongs();showHome()
+}
+
+/* DELETE */
+function confirmDelete(idx){
+  pendingDeleteIdx=idx;
+  document.getElementById('confirmMsg').textContent='Vas a eliminar "'+allSongs[idx].title+'". Esta accion no se puede deshacer.';
+  document.getElementById('confirmOkBtn').onclick=doDelete;
+  document.getElementById('confirmOverlay').classList.add('show')
+}
+function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('show');pendingDeleteIdx=-1}
+function doDelete(){
+  if(pendingDeleteIdx<0)return;
+  const name=allSongs[pendingDeleteIdx].title;
+  allSongs.splice(pendingDeleteIdx,1);persistSongs();closeConfirm();
+  showToast('"'+name+'" eliminada');
+  filterSongs(document.getElementById('searchInput').value)
+}
+
+/* EXPORT */
+function getExportContent(){
+  return document.documentElement.outerHTML.replace(/\/\* SONGS_START \*\/[\s\S]*?\/\* SONGS_END \*\//,'/* SONGS_START */'+JSON.stringify(allSongs)+'/* SONGS_END */')
+}
+function afterExport(){
+  renderList(allSongs);showToast('✓ Archivo guardado')
+}
+async function exportHTML(){
+  // Electron: diálogo nativo para guardar donde quiera
+  if(window.electronAPI){
+    const ok=await window.electronAPI.exportHTML(getExportContent());
+    if(ok!==false)afterExport();
+    return;
+  }
+  // Servidor local Python
+  try{
+    const res=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(allSongs)});
+    if(res.ok){afterExport();return}
+  }catch(e){}
+  // Descarga directa
+  const blob=new Blob([getExportContent()],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cancionero.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  afterExport()
+}
+
+/* SCREENS */
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function showHome(){
+  if(setlistMode){setlistMode=false;document.querySelector('.pres-wrap').classList.remove('sl-mode')}
+  showScreen('home');filterSongs(document.getElementById('searchInput').value);
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})
+}
+
+/* SETLIST */
+function toggleSetlistPanel(){
+  const panel=document.getElementById('slPanel');
+  if(panel.classList.contains('open'))closeSetlistPanel();
+  else{panel.classList.add('open');document.getElementById('slBackdrop').classList.add('show');renderSetlist()}
+}
+function closeSetlistPanel(){
+  document.getElementById('slPanel').classList.remove('open');
+  document.getElementById('slBackdrop').classList.remove('show');
+}
+function toggleSetlistSong(ri){
+  const pos=setlist.indexOf(ri);
+  if(pos===-1)setlist.push(ri);else setlist.splice(pos,1);
+  persistSetlist();renderSetlist();
+  filterSongs(document.getElementById('searchInput').value);
+}
+function slMoveItem(pos,dir){
+  const ni=pos+dir;
+  if(ni<0||ni>=setlist.length)return;
+  [setlist[pos],setlist[ni]]=[setlist[ni],setlist[pos]];
+  persistSetlist();renderSetlist();
+}
+function clearSetlist(){
+  if(setlist.length&&!confirm('¿Limpiar el orden del culto?'))return;
+  setlist=[];persistSetlist();renderSetlist();
+  filterSongs(document.getElementById('searchInput').value);
+}
+function renderSetlist(){
+  const body=document.getElementById('slBody');
+  const startBtn=document.getElementById('slStartBtn');
+  const btn=document.getElementById('cultoBtn');
+  btn.style.color=setlist.length?'var(--accent)':'';
+  btn.style.borderColor=setlist.length?'var(--accent)':'';
+  document.getElementById('slCount').textContent=setlist.length?setlist.length+' canción'+(setlist.length!==1?'es':''):'';
+  startBtn.disabled=!setlist.length;
+  if(!setlist.length){body.innerHTML='<div class="sl-empty">Agregá canciones al culto<br>usando el botón <strong>+</strong> en cada canción.</div>';return}
+  body.innerHTML=setlist.map((si,pos)=>{
+    const s=allSongs[si];if(!s)return'';
+    const cur=setlistMode&&pos===setlistPos;
+    const up='<button class="sl-btn" onclick="slMoveItem('+pos+',-1)"'+(pos===0?' disabled':'')+'>&#8593;</button>';
+    const dn='<button class="sl-btn" onclick="slMoveItem('+pos+',1)"'+(pos===setlist.length-1?' disabled':'')+'>&#8595;</button>';
+    const rm='<button class="sl-btn rm" onclick="toggleSetlistSong('+si+')" title="Quitar">&#10005;</button>';
+    return'<div class="sl-item'+(cur?' sl-current':'')+'">'+
+      '<span class="sl-pos">'+(pos+1)+'</span>'+
+      '<span class="sl-name">'+esc(s.title)+'</span>'+
+      (s.key?'<span class="sl-key">'+esc(s.key)+'</span>':'')+
+      '<div class="sl-acts">'+up+dn+rm+'</div></div>';
+  }).join('');
+}
+function presentSetlist(){
+  if(!setlist.length)return;
+  setlistMode=true;setlistPos=0;
+  closeSetlistPanel();
+  document.querySelector('.pres-wrap').classList.add('sl-mode');
+  openSong(setlist[0]);
+}
+function nextSetlistSong(){
+  if(!setlistMode||setlistPos>=setlist.length-1)return;
+  setlistPos++;openSong(setlist[setlistPos]);
+}
+function prevSetlistSong(){
+  if(!setlistMode||setlistPos<=0)return;
+  setlistPos--;openSong(setlist[setlistPos]);
+}
+function persistSetlist(){localStorage.setItem('cancionero_setlist',JSON.stringify(setlist))}
+function loadSetlist(){try{const s=localStorage.getItem('cancionero_setlist');if(s)setlist=JSON.parse(s)}catch{}}
+
+/* KEYBOARD */
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('presentation').classList.contains('active')){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();navigate(1)}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();navigate(-1)}
+    if(e.key==='Escape')showHome()
+  }
+  if(document.getElementById('confirmOverlay').classList.contains('show')&&e.key==='Escape')closeConfirm()
+})
+
+/* TOAST */
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+(async()=>{
+  if(window.electronAPI){
+    const songs=await window.electronAPI.loadSongs();
+    allSongs=songs||JSON.parse(JSON.stringify(INITIAL_SONGS));
+  }else{initSongs()}
+  loadSetlist();
+  renderList(allSongs)
+})();
+</script>
+</body>
+</html>
